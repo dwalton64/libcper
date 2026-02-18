@@ -9,6 +9,8 @@
 #include <libcper/generator/gen-utils.h>
 #include <libcper/generator/sections/gen-section.h>
 
+//FIXME: Update to use the format defined in Cper.h
+
 //Generates a single pseudo-random platform-action-event error section, saving the resulting address to the given
 //location. Returns the size of the newly created section.
 size_t generate_section_platform_action_event(void **location,

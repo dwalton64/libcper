@@ -12,6 +12,8 @@
 #include <libcper/cper-utils.h>
 #include <libcper/base64.h>
 
+//FIXME: Change to use the format defined in Cper.h
+
 //Converts the given Info-action-ppr CPER section into JSON IR.
 json_object *cper_section_platform_action_event_to_ir(const UINT8 *section, UINT32 size)
 {
