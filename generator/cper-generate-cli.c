@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
 	char *out_file = NULL;
 	char *single_section = NULL;
 	char **sections = NULL;
-	const GEN_VALID_BITS_TEST_TYPE randomValidbitsSet = RANDOM_VALID;
+	GEN_VALID_BITS_TEST_TYPE ValidBitSetting = RANDOM_VALID;
 	UINT16 num_sections = 0;
 	for (int i = 1; i < argc; i++) {
 		if (strcmp(argv[i], "--out") == 0 && i < argc - 1) {
@@ -36,6 +36,22 @@ int main(int argc, char *argv[])
 		} else if (strcmp(argv[i], "--single-section") == 0 &&
 			   i < argc - 1) {
 			single_section = argv[i + 1];
+			i++;
+		} else if (strcmp(argv[i], "--valid-bits") == 0 && i < argc - 1) {
+			if (strcmp(argv[i + 1], "all") == 0) {
+				ValidBitSetting = ALL_VALID;
+			} else if (strcmp(argv[i + 1], "some") == 0) {
+				ValidBitSetting = SOME_VALID;
+			} else if (strcmp(argv[i + 1], "random") == 0) {
+				ValidBitSetting = RANDOM_VALID;
+			} else {
+				printf("Invalid valid bits setting '%s'. Must be one of 'all', 'some', or 'random'.\n",
+				       argv[i + 1]);
+				if (sections) {
+					free(sections);
+				}
+				return -1;
+			}
 			i++;
 		} else if (strcmp(argv[i], "--sections") == 0 && i < argc - 1) {
 			//All arguments after this must be section names.
@@ -77,10 +93,10 @@ int main(int argc, char *argv[])
 	//Which type are we generating?
 	if (single_section != NULL && sections == NULL) {
 		generate_single_section_record(single_section, cper_file,
-					       randomValidbitsSet);
+					       ValidBitSetting);
 	} else if (sections != NULL && single_section == NULL) {
 		generate_cper_record(sections, num_sections, cper_file,
-				     randomValidbitsSet);
+				     ValidBitSetting);
 	} else {
 		//Invalid arguments.
 		printf("Invalid argument. Either both '--sections' and '--single-section' were set, or neither. For command information, refer to 'cper-generate --help'.\n");
@@ -100,12 +116,14 @@ int main(int argc, char *argv[])
 //Prints command help for this CPER generator.
 void print_help(void)
 {
-	printf(":: --out cper.file [--sections section1 ...] [--single-section sectiontype]\n");
+	printf(":: --out cper.file [--sections section1 ...] [--single-section sectiontype] [--valid-bits validbits]\n");
 	printf("\tGenerates a pseudo-random CPER file with the provided section types and outputs to the given file name.\n\n");
 	printf("\tWhen the '--sections' flag is set, all following arguments are section names, and a full CPER log is generated\n");
 	printf("\tcontaining the given sections.\n");
 	printf("\tWhen the '--single-section' flag is set, the next argument is the single section that should be generated, and\n");
 	printf("\ta single section (no header, only a section descriptor & section) CPER file is generated.\n\n");
+	printf("\tWhen the '--valid-bits' flag is set, the next argument is the validation bits setting ('all', 'some', or 'random').\n");
+	printf("\tIf not provided, 'random' is used by default.\n\n");
 	printf("\tValid section type names are the following:\n");
 	for (size_t i = 0; i < generator_definitions_len; i++) {
 		printf("\t\t- %s\n", generator_definitions[i].ShortName);

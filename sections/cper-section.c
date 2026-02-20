@@ -27,6 +27,7 @@
 #include <libcper/sections/cper-section-nvidia.h>
 #include <libcper/sections/cper-section-nvidia-events.h>
 #include <libcper/sections/cper-section-ampere.h>
+#include <libcper/sections/cper-section-platform-action-event.h>
 
 //Definitions of all sections available to the CPER parser.
 CPER_SECTION_DEFINITION section_definitions[] = {
@@ -88,6 +89,9 @@ CPER_SECTION_DEFINITION section_definitions[] = {
 	  cper_section_nvidia_events_to_ir, ir_section_nvidia_events_to_cper },
 	{ &gEfiAmpereErrorSectionGuid, "Ampere", "Ampere",
 	  cper_section_ampere_to_ir, ir_section_ampere_to_cper },
+	{ &gEfiPlatformActionEvent, "Platform Action Event", "PlatformActionEvent",
+	  cper_section_platform_action_event_to_ir,
+	  ir_section_platform_action_event_to_cper },
 };
 const size_t section_definitions_len =
 	sizeof(section_definitions) / sizeof(CPER_SECTION_DEFINITION);
