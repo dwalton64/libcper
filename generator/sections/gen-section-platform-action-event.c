@@ -24,18 +24,18 @@ size_t generate_section_platform_action_event(void **location,
 	UINT8 section_validation_bits = 0;
 	// Set valid bits according to the provided validBitsType.
 	if (validBitsType == SOME_VALID) {
-		// Set some valid bits (for example, let's set the first and third bits).
-		// You can adjust which bits to set based on your needs.
-	} else if (validBitsType == ALL_VALID) {
-		section_validation_bits = EFI_PLATFORM_ACTION_VALID_MASK;
-	} else if (validBitsType == RANDOM_VALID) {
-		section_validation_bits = cper_rand() & EFI_PLATFORM_ACTION_VALID_MASK;
-	} else if (validBitsType == SOME_VALID) {
 		// This event can still be useful with no additional context
 		section_validation_bits = EFI_PLATFORM_ACTION_ACTION_RETURN_CODE_VALID | 
 								   EFI_PLATFORM_ACTION_CPAD_SECTION_INDEX_VALID | 
 								   EFI_PLATFORM_ACTION_RECORD_ID_VALID | 
 									   EFI_PLATFORM_ACTION_ACTION_ID_VALID;
+	} else if (validBitsType == ALL_VALID) {
+		section_validation_bits = EFI_PLATFORM_ACTION_VALID_MASK;
+	} else if (validBitsType == RANDOM_VALID) {
+		section_validation_bits = cper_rand() & EFI_PLATFORM_ACTION_VALID_MASK;
+	} else {
+		printf("Error: Invalid validBitsType provided to generate_section_platform_action_event.\n");
+		return 0;
 	}
 	
 	printf("Generating Platform Action Event section with validation bits: 0x%02X\n", section_validation_bits);

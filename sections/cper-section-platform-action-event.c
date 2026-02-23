@@ -91,7 +91,7 @@ json_object *cper_section_platform_action_event_to_ir(const UINT8 *section, UINT
 				cper_print_log(
 					"Error: Failed to allocate encode output buffer for Platform Action Event additional context. \n");
 			} else {
-				add_string(section_ir, "additionalContext", encoded_context);
+				add_string_len(section_ir, "additionalContext", encoded_context, encoded_len);
 				free(encoded_context);
 			}
 	   }
@@ -141,10 +141,7 @@ void ir_section_platform_action_event_to_cper(json_object *section, FILE *out)
 	}
 
 	// Action Return Code
-	struct json_object *action_return_code_obj;
-	if (json_object_object_get_ex(section, "actionReturnCode", &action_return_code_obj)) {
-		section_cper->ActionReturnCode = (UINT8)json_object_get_int(action_return_code_obj);
-	}
+	get_value_hex_8(section, "actionReturnCode", &section_cper->ActionReturnCode);
 
 	// Read GUIDs from the JSON IR and populate the CPER structure
 	string_to_guid(&section_cper->CpadPlatformId, json_object_get_string(json_object_object_get(section, "cpadPlatformID")));
@@ -152,16 +149,10 @@ void ir_section_platform_action_event_to_cper(json_object *section, FILE *out)
 	string_to_guid(&section_cper->CpadCreatorId, json_object_get_string(json_object_object_get(section, "cpadCreatorID")));
 
 	// CPAD Record ID
-	struct json_object *cpad_record_id_obj;
-	if (json_object_object_get_ex(section, "cpadRecordId", &cpad_record_id_obj)) {
-		section_cper->CpadRecordId = (UINT64)json_object_get_uint64(cpad_record_id_obj);
-	}
+	get_value_hex_64(section, "cpadRecordId", &section_cper->CpadRecordId);
 
 	// CPAD Action ID
-	struct json_object *cpad_action_id_obj;
-	if (json_object_object_get_ex(section, "cpadActionId", &cpad_action_id_obj)) {
-		section_cper->CpadActionId = (UINT16)json_object_get_uint64(cpad_action_id_obj);
-	}
+	get_value_hex_16(section, "cpadActionId", &section_cper->CpadActionId);
 
 	// CPAD Section Descriptor Index
 	struct json_object *cpad_section_index_obj;
