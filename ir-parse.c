@@ -124,7 +124,7 @@ void ir_header_to_cper(json_object *header_ir,
 				json_object_object_get(header_ir,
 						       "timestampIsPrecise"));
 		}
-		add_to_valid_bitfield(&ui32Type, 1);  // FIXME: Should '1' be CPER_HEADER_TIME_STAMP_VALID?
+		add_to_valid_bitfield(&ui32Type, EFI_ERROR_RECORD_HEADER_TIME_STAMP_VALID);
 	}
 
 	//Various GUIDs.
@@ -135,12 +135,12 @@ void ir_header_to_cper(json_object *header_ir,
 	if (platform_id != NULL) {
 		string_to_guid(&header->PlatformID,
 			       json_object_get_string(platform_id));
-		add_to_valid_bitfield(&ui32Type, 0); // FIXME: Should '0' be CPER_HEADER_PLATFORM_ID_VALID?
+		add_to_valid_bitfield(&ui32Type, EFI_ERROR_RECORD_HEADER_PLATFORM_ID_VALID);
 	}
 	if (partition_id != NULL) {
 		string_to_guid(&header->PartitionID,
 			       json_object_get_string(partition_id));
-		add_to_valid_bitfield(&ui32Type, 2); // FIXME: Should '2' be CPER_HEADER_PARTITION_ID_VALID?
+		add_to_valid_bitfield(&ui32Type, EFI_ERROR_RECORD_HEADER_PARTITION_ID_VALID);
 	}
 	string_to_guid(&header->CreatorID,
 		       json_object_get_string(

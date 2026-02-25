@@ -248,7 +248,7 @@ json_object *cper_header_to_ir(EFI_COMMON_ERROR_RECORD_HEADER *header)
 	add_uint(header_ir, "recordLength", header->RecordLength);
 
 	//If a timestamp exists according to validation bits, then add it.
-	if (header->ValidationBits & 0x2) {
+	if (header->ValidationBits & (1 << EFI_ERROR_RECORD_HEADER_TIME_STAMP_VALID)) {
 		char timestamp_string[TIMESTAMP_LENGTH];
 		if (timestamp_to_string(timestamp_string, TIMESTAMP_LENGTH,
 					&header->TimeStamp) >= 0) {
@@ -260,12 +260,12 @@ json_object *cper_header_to_ir(EFI_COMMON_ERROR_RECORD_HEADER *header)
 	}
 
 	//If a platform ID exists according to the validation bits, then add it.
-	if (header->ValidationBits & 0x1) {
+	if (header->ValidationBits & (1 << EFI_ERROR_RECORD_HEADER_PLATFORM_ID_VALID)) {
 		add_guid(header_ir, "platformID", &header->PlatformID);
 	}
 
 	//If a partition ID exists according to the validation bits, then add it.
-	if (header->ValidationBits & 0x4) {
+	if (header->ValidationBits & (1 << EFI_ERROR_RECORD_HEADER_PARTITION_ID_VALID)) {
 		add_guid(header_ir, "partitionID", &header->PartitionID);
 	}
 

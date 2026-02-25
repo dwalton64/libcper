@@ -37,16 +37,12 @@ extern "C" {
 ///@}
 
 ///
-/// The validation bit mask indicates the validity of the following fields
+/// The validation bit positions indicating the validity of the following fields
 /// in Error Record Header.
-/// 
-/// FIXME: These were changed to simple 0,1,2 defines in CPAD.h 
-///         - The numbers are currently hardcoded in ir-parse-cpad.c!
-///         - should they be changed here too?
 ///@{
-#define EFI_ERROR_RECORD_HEADER_PLATFORM_ID_VALID  BIT0
-#define EFI_ERROR_RECORD_HEADER_TIME_STAMP_VALID   BIT1
-#define EFI_ERROR_RECORD_HEADER_PARTITION_ID_VALID BIT2
+#define EFI_ERROR_RECORD_HEADER_PLATFORM_ID_VALID  0
+#define EFI_ERROR_RECORD_HEADER_TIME_STAMP_VALID   1
+#define EFI_ERROR_RECORD_HEADER_PARTITION_ID_VALID 2
 ///@}
 
 ///
@@ -71,21 +67,6 @@ extern "C" {
 ///
 #define EFI_ERROR_DESCRIPTION_STRING_LEN	     64
 #define EFI_ERROR_INFORMATION_DESCRIPTION_STRING_LEN 128
-
-// /// The timestamp correlates to the time when the error information was collected
-// /// by the system software and may not necessarily represent the time of the error
-// /// event. The timestamp contains the local time in BCD format.
-// ///  FIXME: Definition was moved, delete this.
-// typedef struct {
-// 	UINT8 Seconds;
-// 	UINT8 Minutes;
-// 	UINT8 Hours;
-// 	UINT8 Flag;
-// 	UINT8 Day;
-// 	UINT8 Month;
-// 	UINT8 Year;
-// 	UINT8 Century;
-// } EFI_ERROR_TIME_STAMP;
 
 ///
 /// GUID value indicating the record association with an error event notification type.
