@@ -345,16 +345,6 @@ cper_section_descriptor_to_ir(EFI_ERROR_SECTION_DESCRIPTOR *section_descriptor)
 		bitfield_to_ir(section_descriptor->SectionFlags, 8,
 			       CPER_SECTION_DESCRIPTOR_FLAGS_BITFIELD_NAMES);
 	
-	// FIXME: I don't think this matches the latest direction with CPADs
-	//Add bit 31 (actionSuccess) separately if set
-	if (section_descriptor->SectionFlags & 0x80000000) {
-		json_object_object_add(flags, "actionSuccess",
-				       json_object_new_boolean(1));
-	} else {
-		json_object_object_add(flags, "actionSuccess",
-				       json_object_new_boolean(0));
-	}
-	
 	json_object_object_add(section_descriptor_ir, "flags", flags);
 
 	//Section type (GUID).

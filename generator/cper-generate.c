@@ -136,12 +136,6 @@ EFI_ERROR_SECTION_DESCRIPTOR *generate_section_descriptor(char *type,
 	descriptor->Resv1 = 0;
 	descriptor->SectionFlags &= 0xFF;
 
-	//For platform-action-event section, set bit 31 (actionSuccess) to true
-	// FIXME: Probably want to delete this.
-	if (strcmp(type, "platform-action-event") == 0) {
-		descriptor->SectionFlags |= 0x80000000; //Set bit 31
-	}
-
 	//Validation bits all set to 'on'.
 	descriptor->SecValidMask = 0x3;
 

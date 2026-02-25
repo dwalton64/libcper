@@ -611,21 +611,21 @@ static void arm_ras_build_aux_contexts(UINT8 *builtAux, UINT16 ctxCount,
 		json_object_object_get_ex(flagsObj,
 					  "addressSpaceIdentifierScope",
 					  &addressSpaceIdentifierScopeObj);
-		const char *scope =
-			json_object_get_string(addressSpaceIdentifierScopeObj);
-		if (strcmp(scope, "LocalAddressSpace") == 0) {
-			ch->AddressSpaceIdentifierScope = 1;
+		ch->AddressSpaceIdentifierScope = 0;
+		if (addressSpaceIdentifierScopeObj) {
+			const char *scope =
+				json_object_get_string(addressSpaceIdentifierScopeObj);
+			if (scope && strcmp(scope, "LocalAddressSpace") == 0) {
+				ch->AddressSpaceIdentifierScope = 1;
+			}
 		}
-		ch->AddressSpaceIdentifierScope =
-			addressSpaceIdentifierScopeObj ?
-				(UINT8)json_object_get_int(
-					addressSpaceIdentifierScopeObj) :
-				0;
 		ch->Reserved0 = 0;
 		ch->RegisterArrayEntryCount = regCount;
 		json_object *asidObj = NULL;
 		json_object_object_get_ex(ctx, "addressSpaceIdentifier",
 					  &asidObj);
+		ch->AddressSpaceIdentifier = asidObj ?
+			(UINT16)json_object_get_uint64(asidObj) : 0;
 		memset(ch->Reserved1, 0, sizeof(ch->Reserved1));
 		EFI_ARM_RAS_AUX_MM_REG_ENTRY *regEntries =
 			(EFI_ARM_RAS_AUX_MM_REG_ENTRY

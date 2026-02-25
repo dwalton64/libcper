@@ -230,17 +230,6 @@ void ir_section_descriptor_to_cper(json_object *section_descriptor_ir,
 		json_object_object_get(section_descriptor_ir, "flags"), 8,
 		CPER_SECTION_DESCRIPTOR_FLAGS_BITFIELD_NAMES);
 	
-	//Handle actionSuccess (bit 31) separately
-	// FIXME: I don't think this matches the latest direction with CPADs
-	// Need to create a standard CPER for CPAD action results
-	json_object *flags_ir = json_object_object_get(section_descriptor_ir, "flags");
-	if (flags_ir != NULL) {
-		json_object *action_success = json_object_object_get(flags_ir, "actionSuccess");
-		if (action_success != NULL && json_object_get_boolean(action_success)) {
-			descriptor->SectionFlags |= 0x80000000; //Set bit 31
-		}
-	}
-
 	//Section type.
 	json_object *section_type =
 		json_object_object_get(section_descriptor_ir, "sectionType");

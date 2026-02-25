@@ -41,8 +41,7 @@
         "resourceNotAccessible":true,
         "latentError":true,
         "propagated":false,
-        "overflow":true,
-        "actionSuccess":true
+        "overflow":true
       },
       "sectionType":{
         "data":"c7d26a20-0c54-11f1-b370-00155d25b627",
