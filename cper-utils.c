@@ -90,27 +90,6 @@ void ir_generic_error_status_to_cper(
 /******************************************/
 /* CPAD-specific utility functions        */
 
-//Converts a CPAD Urgency field to JSON IR.
-json_object *
-cpad_urgency_to_ir(CPAD_URGENCY_BITFIELD *urgency)
-{
-	json_object *urgency_ir = json_object_new_object();
-
-	//Boolean bit fields.
-	json_object_object_add(
-		urgency_ir, "urgent",
-		json_object_new_boolean(urgency->Urgent));
-	return urgency_ir;
-}
-
-//Converts a CPAD JSON Urgency section into a CPAD Urgency field.
-void ir_cpad_urgency_to_cper(
-	json_object *urgency_ir, CPAD_URGENCY_BITFIELD *urgency_cper)
-{
-	urgency_cper->Urgent = json_object_get_boolean(
-		json_object_object_get(urgency_ir, "urgent"));
-}
-
 // CPAD Actions
 //The available severity types for CPER.
 const char *CPAD_ACTION_NAMES[] = {

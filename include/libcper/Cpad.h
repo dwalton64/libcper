@@ -31,20 +31,18 @@ extern "C" {
 ///
 /// Action Urgency in CPAD headers and section descriptors
 ///@{
-typedef struct {
-	UINT8 Urgent : 1;
-	UINT8 Resv1 : 7;
-} CPAD_URGENCY_BITFIELD;
+#define CPAD_URGENCY_NOT_URGENT 0
+#define CPAD_URGENCY_URGENT     1
 ///@}
 
 // Action Confidence
 #define MAX_CONFIDENCE_LEVEL 100
 
 ///
-/// The validation bit mask indicates the validity of the following fields
+/// The validation bit numbers indicate the validity of the following fields
 /// in Error Record Header.
 ///@{
-#define CPAD_HEADER_PLATFORM_ID_VALID  0   // FIXME: this might be broken in ir-parse-cpad.c Check for use of ValidationTypes
+#define CPAD_HEADER_PLATFORM_ID_VALID  0
 #define CPAD_HEADER_TIME_STAMP_VALID   1
 #define CPAD_HEADER_PARTITION_ID_VALID 2
 ///@}
@@ -91,7 +89,7 @@ typedef struct {
 	UINT16 Revision;
 	UINT32 SignatureEnd;
 	UINT16 SectionCount;
-	CPAD_URGENCY_BITFIELD Urgency;
+	UINT8 Urgency;
     UINT8 Confidence;
     UINT16 Reserved1;
 	UINT32 ValidationBits;
@@ -118,14 +116,16 @@ typedef struct {
 ///
 /// Validity Fields in Error Section Descriptor.
 ///
-#define CPAD_SECTION_FRU_ID_VALID	   0
-#define CPAD_SECTION_FRU_STRING_VALID  1
+#define CPAD_SECTION_FRU_ID_VALID	       0
+#define CPAD_SECTION_FRU_STRING_VALID  	   1
+#define CPAD_SECTION_URGENCY_VALID		   2
+#define CPAD_SECTION_CONFIDENCE_VALID	   3
 
 ///
 /// Flag field contains information that describes the error section
 /// in Error Section Descriptor.
 ///
-//#define CPAD_SECTION_FLAGS_RESERVED			        BIT0
+#define CPAD_SECTION_FLAGS_RESERVED			        0X00000000
 
 ///
 /// CPAD Section Descriptor - each section represents an action to be taken.
@@ -139,7 +139,7 @@ typedef struct {
 	UINT32 Flags;
 	EFI_GUID SectionType;
 	EFI_GUID FruId;
-    CPAD_URGENCY_BITFIELD Urgency;
+    UINT8 Urgency;
     UINT8 Confidence;
     UINT16 Reserved2;
 	CHAR8 FruString[20];

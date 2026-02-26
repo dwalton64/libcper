@@ -238,8 +238,8 @@ json_object *cpad_header_to_ir(CPAD_HEADER *header)
 			       json_object_new_int(header->SectionCount));
 
 	//CPAD Urgency	
-	json_object_object_add(header_ir, "urgency", cpad_urgency_to_ir(
-		(CPAD_URGENCY_BITFIELD *)&header->Urgency));
+	json_object_object_add(header_ir, "urgency",
+			       json_object_new_int(header->Urgency));
 
 	//CPAD Confidence.
 	json_object_object_add(header_ir, "confidence",
@@ -344,25 +344,29 @@ cpad_section_descriptor_to_ir(CPAD_SECTION_DESCRIPTOR *section_descriptor)
 			       section_type);
 
 	//If validation bits indicate it exists, add FRU ID.
-	if (section_descriptor->SecValidMask & 0x1) {
+	if (section_descriptor->SecValidMask & (1 << CPAD_SECTION_FRU_ID_VALID)) {
 		add_guid(section_descriptor_ir, "fruID",
 			 &section_descriptor->FruId);
 	}
 
 	//If validation bits indicate it exists, add FRU text.
-	if ((section_descriptor->SecValidMask & 0x2) >> 1) {
+	if (section_descriptor->SecValidMask & (1 << CPAD_SECTION_FRU_STRING_VALID)) {
 		add_untrusted_string(section_descriptor_ir, "fruText",
 				     section_descriptor->FruString,
 				     sizeof(section_descriptor->FruString));
 	}
 
-	//CPAD Urgency	
-	json_object_object_add(section_descriptor_ir, "urgency", cpad_urgency_to_ir(
-		(CPAD_URGENCY_BITFIELD *)&section_descriptor->Urgency));
+	//If validation bits indicate it exists, add CPAD Urgency.
+	if (section_descriptor->SecValidMask & (1 << CPAD_SECTION_URGENCY_VALID)) {
+		json_object_object_add(section_descriptor_ir, "urgency",
+				       json_object_new_int(section_descriptor->Urgency));
+	}
 
-	//CPAD Confidence.
-	json_object_object_add(section_descriptor_ir, "confidence",
-			       json_object_new_int(section_descriptor->Confidence));
+	//If validation bits indicate it exists, add CPAD Confidence.
+	if (section_descriptor->SecValidMask & (1 << CPAD_SECTION_CONFIDENCE_VALID)) {
+		json_object_object_add(section_descriptor_ir, "confidence",
+				       json_object_new_int(section_descriptor->Confidence));
+	}
 
 	//CPAD Action.
 	/*

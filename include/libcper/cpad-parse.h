@@ -8,19 +8,8 @@ extern "C" {
 #include <json.h>
 #include <stdio.h>
 
-#define CPER_HEADER_VALID_BITFIELD_NAMES                                       \
-	(const char *[]){ "platformIDValid", "timestampValid",                 \
-			  "partitionIDValid" }
-#define CPAD_SECTION_DESCRIPTOR_VALID_BITFIELD_NAMES                           \
-	(const char *[]){ "fruIDValid", "fruStringValid" }
-#define CPAD_URGENCY_BITFIELD_NAMES                                        \
-    (const char *[]){ "high" }
-#define CPAD_SECTION_DESCRIPTOR_FLAGS_BITFIELD_NAMES                           \
-	(const char *[]){ "reserved" }
-#define CPAD_SECTION_DESCRIPTOR_FLAGS_NAMES_COUNT 1
-#define CPAD_HEADER_FLAG_TYPES_KEYS (int[]){ 1 }
-#define CPAD_HEADER_FLAG_TYPES_VALUES                                          \
-	(const char *[]){ "Reserved" }
+
+
 
 int cpad_header_valid(const char *cpad_buf, size_t size);
 

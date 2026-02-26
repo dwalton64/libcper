@@ -21,7 +21,7 @@ CPAD_SECTION_DESCRIPTOR *generate_cpad_section_descriptor(char *type,
 							  int num_sections);
 size_t generate_cpad_section(void **location, char *type);
 UINT8 generate_random_confidence();
-CPAD_URGENCY_BITFIELD generate_random_urgency();
+UINT8 generate_random_urgency();
 
 
 //Generates a CPAD record with the given section types, outputting to the given stream.
@@ -49,7 +49,7 @@ void generate_cpad_record(char **types, UINT16 *action_ids, UINT16 num_sections,
     header->Revision = CPAD_REVISION;
 	header->SignatureEnd = CPAD_SIGNATURE_END;
     header->SectionCount = num_sections;
-    header->Urgency = (CPAD_URGENCY_BITFIELD){0};  //set later depending on section urgencies
+    header->Urgency = CPAD_URGENCY_NOT_URGENT;  //set later depending on section urgencies
     header->Confidence = 0;                        //set later depending on section confidences
     header->ValidationBits = 0x7; //PlatformID, PartitionID, TimeStamp valid
     // RecordLength filled later
@@ -68,8 +68,8 @@ void generate_cpad_record(char **types, UINT16 *action_ids, UINT16 num_sections,
 		UINT16 action_id = (action_ids != NULL) ? action_ids[i] : 0;
 		section_descriptors[i] = generate_cpad_section_descriptor(
 			types[i], action_id, section_lengths, i, num_sections);
-        if (section_descriptors[i]->Urgency.Urgent) {
-            header->Urgency.Urgent = 1; // If any section is urgent, set header urgent
+        if (section_descriptors[i]->Urgency == CPAD_URGENCY_URGENT) {
+            header->Urgency = CPAD_URGENCY_URGENT; // If any section is urgent, set header urgent
         }
         if (section_descriptors[i]->Confidence > header->Confidence) {
             header->Confidence = section_descriptors[i]->Confidence; // Set header confidence to max of any section's confidence
@@ -135,7 +135,10 @@ CPAD_SECTION_DESCRIPTOR *generate_cpad_section_descriptor(char *type,
     // Allocate memory for the descriptor and initialize it to zero.
     CPAD_SECTION_DESCRIPTOR *descriptor = (CPAD_SECTION_DESCRIPTOR *)calloc(1, sizeof(CPAD_SECTION_DESCRIPTOR));
     descriptor->Revision = (UINT16)cper_rand();
-    descriptor->SecValidMask = 3; // FRuId and FruString valid
+    descriptor->SecValidMask = (1 << CPAD_SECTION_FRU_ID_VALID)
+                             | (1 << CPAD_SECTION_FRU_STRING_VALID)
+                             | (1 << CPAD_SECTION_URGENCY_VALID)
+                             | (1 << CPAD_SECTION_CONFIDENCE_VALID);
     descriptor->Flags = 0; // Reserved
     descriptor->SectionType = (EFI_GUID){0}; //set later
     descriptor->FruId = generate_random_guid();
@@ -221,12 +224,9 @@ size_t generate_cpad_section(void **location, char *type)
 
 
 //Create random urgency value for CPAD sections
-CPAD_URGENCY_BITFIELD generate_random_urgency()
+UINT8 generate_random_urgency()
 {
-    CPAD_URGENCY_BITFIELD urgency;
-    urgency.Urgent = cper_rand() % 2; //0 or 1
-    urgency.Resv1 = 0;
-    return urgency;
+    return (UINT8)(cper_rand() % 2); //0 (not urgent) or 1 (urgent)
 } 
 
 //Create random confidence value for CPAD sections

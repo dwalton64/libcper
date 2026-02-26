@@ -34,9 +34,6 @@ void ir_generic_error_status_to_cper(
 const char *severity_to_string(UINT32 severity);
 
 // CPAD-specific utility functions
-json_object *cpad_urgency_to_ir(CPAD_URGENCY_BITFIELD *urgency);
-void ir_cpad_urgency_to_cper(
-	json_object *urgency_ir, CPAD_URGENCY_BITFIELD *urgency_cper);
 const char *action_to_string(UINT16 action);
 
 // Common utility functions

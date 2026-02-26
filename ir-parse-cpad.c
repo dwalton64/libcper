@@ -108,9 +108,9 @@ void ir_header_to_cpad(json_object *header_ir,
 		json_object_object_get(header_ir, "sectionCount"));
 	header->SectionCount = (UINT16)section_count;
 
-	//CPAD Urgency - field is shown in json raw as code and is also decoded.
+	//CPAD Urgency.
 	json_object *urgency = json_object_object_get(header_ir, "urgency");
-	ir_cpad_urgency_to_cper(urgency, (CPAD_URGENCY_BITFIELD *)&header->Urgency);
+	header->Urgency = (UINT8)json_object_get_int(urgency);
 
 	//CPAD Confidence.
 	UINT64 confidence = json_object_get_uint64(json_object_object_get(header_ir, "confidence"));
@@ -257,14 +257,19 @@ void ir_section_descriptor_to_cpad(json_object *section_descriptor_ir,
 		}
 	}
 
-	//CPAD Urgency - field is shown in json raw as code and is also decoded.
+	//CPAD Urgency, if present.
 	json_object *urgency = json_object_object_get(section_descriptor_ir, "urgency");
-	ir_cpad_urgency_to_cper(urgency, (CPAD_URGENCY_BITFIELD *)&descriptor->Urgency);
+	if (urgency != NULL) {
+		descriptor->Urgency = (UINT8)json_object_get_int(urgency);
+		add_to_valid_bitfield(&ui8Type, CPAD_SECTION_URGENCY_VALID);
+	}
 
-
-	//CPAD Confidence.
-	int confidence = (int)json_object_get_int(json_object_object_get(section_descriptor_ir, "confidence"));
-	descriptor->Confidence = (UINT8)confidence;
+	//CPAD Confidence, if present.
+	json_object *confidence_obj = NULL;
+	if (json_object_object_get_ex(section_descriptor_ir, "confidence", &confidence_obj)) {
+		descriptor->Confidence = (UINT8)json_object_get_int(confidence_obj);
+		add_to_valid_bitfield(&ui8Type, CPAD_SECTION_CONFIDENCE_VALID);
+	}
 
 	//FRU text, if present.
 	if (json_object_object_get_ex(section_descriptor_ir, "fruText", &obj)) {
