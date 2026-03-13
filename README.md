@@ -21,25 +21,40 @@ ninja -C build
 
 ## Usage
 
-This project comes with several binaries to help you deal with CPER binary and
-CPER-JSON. The first of these is `cper-convert`, which is a command line tool
+This project comes with several binaries to help you deal with CPER and CPADs in binary and
+JSON formats. The first of these is `cper-convert`, which is a command line tool
 that can be found in `build/`. With this, you can convert to and from CPER and
 CPER-JSON through the command line. An example usage scenario is below:
 
 ```sh
-build/cper-convert to-cper examples/arm.json --out cper.dump
-build/cper-convert to-json cper.dump
+build/cper-convert to-cper examples/arm.json --out arm.cper
+build/cper-convert to-json arm.cper --out arm.json
+
+build/cpad-convert to-cpad examples/replace_part.json --out replace_part.cpad
+build/cpad-convert to-json replace_part.cpad --out replace_part.json
 ```
 
-Another tool bundled with this repository is `cper-generate`, found in `build/`.
-This allows you to generate pseudo-random valid CPER records with sections of
-specified types for testing purposes. An example use of the program is below:
+This repository also provides tools for generating CPERs and CPADs in `build/`
+
+`cper-generate`
+Allows you to generate pseudo-random valid CPER records with sections of
+specified types for testing purposes. 
+
+`cpad-generate`
+Generates CPADS with specified Action IDs and section types.  Note that, because
+micro-architectures vary significantly, CPAD bodies are often expected to 
+contain opaque binary data.  Use `unknown` sections to generate representative
+CPADs.
+
+Examples of CPER and CPAD generation follow:
 
 ```sh
 build/cper-generate --out cper.generated.dump --sections generic ia32x64
+
+build/cpad-generate --out replace_part.cpad --action-ids 5 --sections unknown
 ```
 
-Help for both of these tools can be accessed through using the `--help` flag in
+Help for these tools can be accessed through using the `--help` flag in
 isolation.
 
 Finally, a static library containing symbols for converting CPER and CPER-JSON
