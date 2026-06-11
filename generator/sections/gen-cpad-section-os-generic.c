@@ -22,6 +22,6 @@ size_t generate_cpad_section__os_generic(void **location)
 	section->Parameter1 = cper_rand64();
 	section->Parameter2 = cper_rand64();
 	section->Parameter3 = cper_rand64();
-	*location =	section;
+	*location = section;
 	return size;
 }

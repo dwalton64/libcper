@@ -12,12 +12,11 @@
 #include <libcper/base64.h>
 #include <libcper/Cpad.h>
 #include <libcper/cpad-parse.h>
-#include <libcper/cper-utils.h>  // these are general and apply to both CPER and CPAD
+#include <libcper/cper-utils.h> // these are general and apply to both CPER and CPAD
 #include <libcper/sections/cpad-section.h>
 
 //Private pre-declarations.
-void ir_header_to_cpad(json_object *header_ir,
-		       CPAD_HEADER *header);
+void ir_header_to_cpad(json_object *header_ir, CPAD_HEADER *header);
 void ir_section_descriptor_to_cpad(json_object *section_descriptor_ir,
 				   CPAD_SECTION_DESCRIPTOR *descriptor);
 void ir_section_to_cpad(json_object *section,
@@ -29,9 +28,7 @@ void ir_section_to_cpad(json_object *section,
 void ir_to_cpad(json_object *ir, FILE *out)
 {
 	//Create the CPAD header.
-	CPAD_HEADER *header =
-		(CPAD_HEADER *)calloc(
-			1, sizeof(CPAD_HEADER));
+	CPAD_HEADER *header = (CPAD_HEADER *)calloc(1, sizeof(CPAD_HEADER));
 	ir_header_to_cpad(json_object_object_get(ir, "header"), header);
 	fwrite(header, sizeof(CPAD_HEADER), 1, out);
 	fflush(out);
@@ -51,8 +48,7 @@ void ir_to_cpad(json_object *ir, FILE *out)
 		ir_section_descriptor_to_cpad(
 			json_object_array_get_idx(section_descriptors, i),
 			descriptors[i]);
-		fwrite(descriptors[i], sizeof(CPAD_SECTION_DESCRIPTOR), 1,
-		       out);
+		fwrite(descriptors[i], sizeof(CPAD_SECTION_DESCRIPTOR), 1, out);
 		fflush(out);
 	}
 
@@ -82,16 +78,9 @@ void ir_to_cpad(json_object *ir, FILE *out)
 }
 
 //Converts a CPAD-JSON IR header to a CPAD header structure.
-void ir_header_to_cpad(json_object *header_ir,
-		       CPAD_HEADER *header)
+void ir_header_to_cpad(json_object *header_ir, CPAD_HEADER *header)
 {
-    // FIXME: Shouldn't this use the CPAD_SIGNATURE_START define?
-    //        But the byte order is reversed below.
-	header->SignatureStart = 0x44415043; //CPAD
-
-    // Is the byte order wrong below?
-    // header->SignatureStart = CPAD_SIGNATURE_START;
-
+	header->SignatureStart = CPAD_SIGNATURE_START;
 
 	//Revision.
 	json_object *revision = json_object_object_get(header_ir, "revision");
@@ -134,19 +123,21 @@ void ir_header_to_cpad(json_object *header_ir,
 	}
 
 	//Various GUIDs.
-	json_object *platform_id;
-	json_object_object_get_ex(header_ir, "platformID", &platform_id);
-	json_object *partition_id;
-	json_object_object_get_ex(header_ir, "partitionID", &partition_id);
-	if (platform_id != NULL) {
+	json_object *platform_id = NULL;
+	json_object *partition_id = NULL;
+	if (json_object_object_get_ex(header_ir, "platformID", &platform_id) &&
+	    platform_id != NULL) {
 		string_to_guid(&header->PlatformID,
 			       json_object_get_string(platform_id));
 		add_to_valid_bitfield(&ui32Type, CPAD_HEADER_PLATFORM_ID_VALID);
 	}
-	if (partition_id != NULL) {
+	if (json_object_object_get_ex(header_ir, "partitionID",
+				      &partition_id) &&
+	    partition_id != NULL) {
 		string_to_guid(&header->PartitionID,
 			       json_object_get_string(partition_id));
-		add_to_valid_bitfield(&ui32Type, CPAD_HEADER_PARTITION_ID_VALID);
+		add_to_valid_bitfield(&ui32Type,
+				      CPAD_HEADER_PARTITION_ID_VALID);
 	}
 	string_to_guid(&header->CreatorID,
 		       json_object_get_string(
@@ -218,14 +209,12 @@ void ir_section_descriptor_to_cpad(json_object *section_descriptor_ir,
 		json_object_get_int(json_object_object_get(revision, "major"));
 	descriptor->Revision = minor + (major << 8);
 
-
 	//Validation bits, flags
 	ValidationTypes ui8Type = { UINT_8T, .value.ui8 = 0 };
-	
+
 	//Flags.  Currently a reserved field, are read as uint32.
 	descriptor->Flags = (UINT32)json_object_get_uint64(
 		json_object_object_get(section_descriptor_ir, "flags"));
-
 
 	struct json_object *obj = NULL;
 
@@ -242,12 +231,14 @@ void ir_section_descriptor_to_cpad(json_object *section_descriptor_ir,
 		if (fru_id != NULL) {
 			string_to_guid(&descriptor->FruId,
 				       json_object_get_string(fru_id));
-			add_to_valid_bitfield(&ui8Type, CPAD_SECTION_FRU_ID_VALID);
+			add_to_valid_bitfield(&ui8Type,
+					      CPAD_SECTION_FRU_ID_VALID);
 		}
 	}
 
 	//CPAD Urgency, if present.
-	json_object *urgency = json_object_object_get(section_descriptor_ir, "urgency");
+	json_object *urgency =
+		json_object_object_get(section_descriptor_ir, "urgency");
 	if (urgency != NULL) {
 		descriptor->Urgency = (UINT8)json_object_get_int(urgency);
 		add_to_valid_bitfield(&ui8Type, CPAD_SECTION_URGENCY_VALID);
@@ -255,8 +246,10 @@ void ir_section_descriptor_to_cpad(json_object *section_descriptor_ir,
 
 	//CPAD Confidence, if present.
 	json_object *confidence_obj = NULL;
-	if (json_object_object_get_ex(section_descriptor_ir, "confidence", &confidence_obj)) {
-		descriptor->Confidence = (UINT8)json_object_get_int(confidence_obj);
+	if (json_object_object_get_ex(section_descriptor_ir, "confidence",
+				      &confidence_obj)) {
+		descriptor->Confidence =
+			(UINT8)json_object_get_int(confidence_obj);
 		add_to_valid_bitfield(&ui8Type, CPAD_SECTION_CONFIDENCE_VALID);
 	}
 
@@ -270,16 +263,17 @@ void ir_section_descriptor_to_cpad(json_object *section_descriptor_ir,
 			descriptor
 				->FruString[sizeof(descriptor->FruString) - 1] =
 				'\0';
-			add_to_valid_bitfield(&ui8Type, CPAD_SECTION_FRU_STRING_VALID);
+			add_to_valid_bitfield(&ui8Type,
+					      CPAD_SECTION_FRU_STRING_VALID);
 		}
 	}
 
 	//ActionId - only looks at the "code" field and ignores "name".
-	json_object *action_id = json_object_object_get(section_descriptor_ir, "actionID");
+	json_object *action_id =
+		json_object_object_get(section_descriptor_ir, "actionID");
 	const char *action_code_str = json_object_get_string(
 		json_object_object_get(action_id, "code"));
 	descriptor->ActionID = (UINT16)strtoul(action_code_str, NULL, 16);
-
 
 	descriptor->SecValidMask = ui8Type.value.ui8;
 }

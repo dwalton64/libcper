@@ -8,9 +8,6 @@ extern "C" {
 #include <json.h>
 #include <stdio.h>
 
-
-
-
 int cpad_header_valid(const char *cpad_buf, size_t size);
 
 json_object *cpad_to_ir(FILE *cpad_file);

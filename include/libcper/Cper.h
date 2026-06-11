@@ -175,6 +175,13 @@ typedef struct {
 #define EFI_ERROR_SECTION_FRU_STRING_VALID BIT1
 
 ///
+/// Bit indices (not masks) of the validity fields above, for use when
+/// building the section descriptor validation bitfield.
+///
+#define EFI_ERROR_SECTION_FRU_ID_VALID_BIT     0
+#define EFI_ERROR_SECTION_FRU_STRING_VALID_BIT 1
+
+///
 /// Flag field contains information that describes the error section
 /// in Error Section Descriptor.
 ///

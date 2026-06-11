@@ -24,15 +24,16 @@ extern "C" {
 #pragma pack(push, 1)
 
 #define CPAD_SIGNATURE_START SIGNATURE_32('C', 'P', 'A', 'D')
-#define CPAD_SIGNATURE_END	 0xFFFFFFFF // per CPER & CPAD specs
+#define CPAD_SIGNATURE_END   0xFFFFFFFF // per CPER & CPAD specs
 
-#define CPAD_REVISION 0x0100 //Major: 0x01, Minor: 0x00 (CPER-style, per RAS API spec)
+#define CPAD_REVISION                                                          \
+	0x0100 //Major: 0x01, Minor: 0x00 (CPER-style, per RAS API spec)
 
 ///
 /// Action Urgency in CPAD headers and section descriptors
 ///@{
 #define CPAD_URGENCY_NOT_URGENT 0
-#define CPAD_URGENCY_URGENT     1
+#define CPAD_URGENCY_URGENT	1
 ///@}
 
 // Action Confidence
@@ -51,14 +52,13 @@ extern "C" {
 /// Timestamp is precise if this bit is set and correlates to the time of the
 /// error event.  Used in the CPAD TimeStamp.Flag field.
 ///
-#define CPAD_TIME_STAMP_PRECISE BIT0 
+#define CPAD_TIME_STAMP_PRECISE BIT0
 
 ///
 /// Hexadecimal string representation of a 64bit integer
 /// 16 digits + 2 char + 1 null termination
 ///
 #define CPAD_UINT64_HEX_STRING_LEN 19
-
 
 ///
 /// CPAD Header Flags
@@ -83,8 +83,8 @@ typedef struct {
 	UINT32 SignatureEnd;
 	UINT16 SectionCount;
 	UINT8 Urgency;
-    UINT8 Reserved1;
-    UINT16 Reserved2;
+	UINT8 Reserved1;
+	UINT16 Reserved2;
 	UINT32 ValidationBits;
 	UINT32 RecordLength;
 	EFI_ERROR_TIME_STAMP TimeStamp;
@@ -104,21 +104,22 @@ typedef struct {
 	///
 } CPAD_HEADER;
 
-#define CPAD_SECTION_REVISION 0x0100 //Major: 0x01, Minor: 0x00, consistent with header
+#define CPAD_SECTION_REVISION                                                  \
+	0x0100 //Major: 0x01, Minor: 0x00, consistent with header
 
 ///
 /// Validity Fields in Error Section Descriptor.
 ///
-#define CPAD_SECTION_FRU_ID_VALID	       0
-#define CPAD_SECTION_FRU_STRING_VALID  	   1
-#define CPAD_SECTION_URGENCY_VALID		   2
-#define CPAD_SECTION_CONFIDENCE_VALID	   3
+#define CPAD_SECTION_FRU_ID_VALID     0
+#define CPAD_SECTION_FRU_STRING_VALID 1
+#define CPAD_SECTION_URGENCY_VALID    2
+#define CPAD_SECTION_CONFIDENCE_VALID 3
 
 ///
 /// Flag field contains information that describes the error section
 /// in Error Section Descriptor.
 ///
-#define CPAD_SECTION_FLAGS_RESERVED			        0X00000000
+#define CPAD_SECTION_FLAGS_RESERVED 0X00000000
 
 ///
 /// CPAD Section Descriptor - each section represents an action to be taken.
@@ -132,28 +133,29 @@ typedef struct {
 	UINT32 Flags;
 	EFI_GUID SectionType;
 	EFI_GUID FruId;
-    UINT8 Urgency;
-    UINT8 Confidence;
-    UINT16 Reserved2;
+	UINT8 Urgency;
+	UINT8 Confidence;
+	UINT16 Reserved2;
 	CHAR8 FruString[20];
-    UINT16 ActionID;
+	UINT16 ActionID;
 } CPAD_SECTION_DESCRIPTOR;
 
 // CPAD Section Action ID definitions
 // Standard Action IDs (0x0000 - 0x7FFF) as defined in the RAS API
 // specification.  Action IDs 0x0007 - 0x7FFF are reserved.
-#define CPAD_ACTION_DO_NOTHING 				0x0000  // Can be used to test CPAD routing
-#define CPAD_ACTION_RESET_NO_POWER_CYCLE	0x0001
-#define CPAD_ACTION_POWER_CYCLE				0x0002
-#define CPAD_ACTION_RESEAT_PART				0x0003
-#define CPAD_ACTION_SHUFFLE_PART			0x0004  // May be only used for diagnostic testing
-#define CPAD_ACTION_REPLACE_PART			0x0005
-#define CPAD_ACTION_INJECT_ERROR			0x0006 
+#define CPAD_ACTION_DO_NOTHING		 0x0000 // Can be used to test CPAD routing
+#define CPAD_ACTION_RESET_NO_POWER_CYCLE 0x0001
+#define CPAD_ACTION_POWER_CYCLE		 0x0002
+#define CPAD_ACTION_RESEAT_PART		 0x0003
+#define CPAD_ACTION_SHUFFLE_PART                                               \
+	0x0004 // May be only used for diagnostic testing
+#define CPAD_ACTION_REPLACE_PART 0x0005
+#define CPAD_ACTION_INJECT_ERROR 0x0006
 
 // Proprietary Action IDs start here
 // These IDs are not defined by OCP RAS API working group and are not
 // named in this header file. They will be printed as numeric values only.
-#define FIRST_PROPRIETARY_ACTION_ID 		0x8000
+#define FIRST_PROPRIETARY_ACTION_ID 0x8000
 
 // CPAD Section Definitions are in cpad-section.h and cpad-section.c
 // GUIDs for standard sections are in Cpad-guid.c

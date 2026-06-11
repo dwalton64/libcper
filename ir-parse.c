@@ -84,7 +84,7 @@ void ir_to_cper(json_object *ir, FILE *out)
 void ir_header_to_cper(json_object *header_ir,
 		       EFI_COMMON_ERROR_RECORD_HEADER *header)
 {
-	header->SignatureStart = 0x52455043; //CPER
+	header->SignatureStart = EFI_ERROR_RECORD_SIGNATURE_START; //CPER
 
 	//Revision.
 	json_object *revision = json_object_object_get(header_ir, "revision");
@@ -94,7 +94,7 @@ void ir_header_to_cper(json_object *header_ir,
 		json_object_get_int(json_object_object_get(revision, "major"));
 	header->Revision = minor + (major << 8);
 
-	header->SignatureEnd = 0xFFFFFFFF;
+	header->SignatureEnd = EFI_ERROR_RECORD_SIGNATURE_END;
 
 	//Section count.
 	int section_count = json_object_get_int(
@@ -243,7 +243,7 @@ void ir_section_descriptor_to_cper(json_object *section_descriptor_ir,
 		if (fru_id != NULL) {
 			string_to_guid(&descriptor->FruId,
 				       json_object_get_string(fru_id));
-			add_to_valid_bitfield(&ui8Type, 0);  // FIXME: Should '0' be CPER_SECTION_FRU_ID_VALID?
+			add_to_valid_bitfield(&ui8Type, EFI_ERROR_SECTION_FRU_ID_VALID_BIT);
 		}
 	}
 
@@ -263,7 +263,7 @@ void ir_section_descriptor_to_cper(json_object *section_descriptor_ir,
 			descriptor
 				->FruString[sizeof(descriptor->FruString) - 1] =
 				'\0';
-			add_to_valid_bitfield(&ui8Type, 1);
+			add_to_valid_bitfield(&ui8Type, EFI_ERROR_SECTION_FRU_STRING_VALID_BIT);
 		}
 	}
 	descriptor->SecValidMask = ui8Type.value.ui8;

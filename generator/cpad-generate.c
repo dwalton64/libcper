@@ -23,7 +23,6 @@ size_t generate_cpad_section(void **location, char *type);
 UINT8 generate_random_confidence();
 UINT8 generate_random_urgency();
 
-
 //Generates a CPAD record with the given section types, outputting to the given stream.
 // Assumes that PlatformID, PartitionID and TimeStamp are all valid (Validation bits set).
 void generate_cpad_record(char **types, UINT16 *action_ids, UINT16 num_sections,
@@ -33,8 +32,8 @@ void generate_cpad_record(char **types, UINT16 *action_ids, UINT16 num_sections,
 	void *sections[num_sections];
 	size_t section_lengths[num_sections];
 	for (int i = 0; i < num_sections; i++) {
-		section_lengths[i] = generate_cpad_section(sections + i,
-							   types[i]);
+		section_lengths[i] =
+			generate_cpad_section(sections + i, types[i]);
 		if (section_lengths[i] == 0) {
 			//Error encountered, exit.
 			printf("Error encountered generating section %d of type '%s', length returned zero.\n",
@@ -43,32 +42,35 @@ void generate_cpad_record(char **types, UINT16 *action_ids, UINT16 num_sections,
 		}
 	}
 
-	//Generate the header 
+	//Generate the header
 	CPAD_HEADER *header = (CPAD_HEADER *)calloc(1, sizeof(CPAD_HEADER));
 	header->SignatureStart = CPAD_SIGNATURE_START;
-    header->Revision = CPAD_REVISION;
+	header->Revision = CPAD_REVISION;
 	header->SignatureEnd = CPAD_SIGNATURE_END;
-    header->SectionCount = num_sections;
-    header->Urgency = CPAD_URGENCY_NOT_URGENT;  //set later depending on section urgencies
-    header->ValidationBits = 0x7; //PlatformID, PartitionID, TimeStamp valid
-    // RecordLength filled later
+	header->SectionCount = num_sections;
+	header->Urgency =
+		CPAD_URGENCY_NOT_URGENT; //set later depending on section urgencies
+	header->ValidationBits = (1 << CPAD_HEADER_PLATFORM_ID_VALID) |
+				 (1 << CPAD_HEADER_PARTITION_ID_VALID) |
+				 (1 << CPAD_HEADER_TIME_STAMP_VALID);
+	// RecordLength filled later
 	generate_random_timestamp(&header->TimeStamp);
-    header->PlatformID = generate_random_guid();
-    header->PartitionID = generate_random_guid();
-    header->CreatorID = generate_random_guid();
+	header->PlatformID = generate_random_guid();
+	header->PartitionID = generate_random_guid();
+	header->CreatorID = generate_random_guid();
 	header->RecordID = cper_rand64();
-    header->Flags = 0; // CPER-inherited flags; default zero
+	header->Flags = 0; // CPER-inherited flags; default zero
 
-  
 	//Generate the section descriptors given the number of sections.
 	CPAD_SECTION_DESCRIPTOR *section_descriptors[num_sections];
 	for (int i = 0; i < num_sections; i++) {
 		UINT16 action_id = (action_ids != NULL) ? action_ids[i] : 0;
 		section_descriptors[i] = generate_cpad_section_descriptor(
 			types[i], action_id, section_lengths, i, num_sections);
-        if (section_descriptors[i]->Urgency == CPAD_URGENCY_URGENT) {
-            header->Urgency = CPAD_URGENCY_URGENT; // If any section is urgent, set header urgent
-        }
+		if (section_descriptors[i]->Urgency == CPAD_URGENCY_URGENT) {
+			header->Urgency =
+				CPAD_URGENCY_URGENT; // If any section is urgent, set header urgent
+		}
 	}
 
 	//Calculate total length of structure, set in header.
@@ -97,7 +99,8 @@ void generate_cpad_record(char **types, UINT16 *action_ids, UINT16 num_sections,
 }
 
 //Generates a single section record for the given section, and outputs to file.
-void generate_single_cpad_section_record(char *type, UINT16 action_id, FILE *out)
+void generate_single_cpad_section_record(char *type, UINT16 action_id,
+					 FILE *out)
 {
 	//Generate a section.
 	void *section = NULL;
@@ -126,21 +129,22 @@ CPAD_SECTION_DESCRIPTOR *generate_cpad_section_descriptor(char *type,
 							  int index,
 							  int num_sections)
 {
-
-    // Allocate memory for the descriptor and initialize it to zero.
-    CPAD_SECTION_DESCRIPTOR *descriptor = (CPAD_SECTION_DESCRIPTOR *)calloc(1, sizeof(CPAD_SECTION_DESCRIPTOR));
-    descriptor->Revision = (UINT16)cper_rand();
-    descriptor->SecValidMask = (1 << CPAD_SECTION_FRU_ID_VALID)
-                             | (1 << CPAD_SECTION_FRU_STRING_VALID)
-                             | (1 << CPAD_SECTION_URGENCY_VALID)
-                             | (1 << CPAD_SECTION_CONFIDENCE_VALID);
-    descriptor->Flags = 0; // Reserved
-    descriptor->SectionType = (EFI_GUID){0}; //set later
-    descriptor->FruId = generate_random_guid();
-    descriptor->Urgency = generate_random_urgency();
-    descriptor->Confidence = generate_random_confidence(); 
-    generate_random_printable_string(descriptor->FruString, sizeof(descriptor->FruString));
-    descriptor->ActionID = action_id;
+	// Allocate memory for the descriptor and initialize it to zero.
+	CPAD_SECTION_DESCRIPTOR *descriptor = (CPAD_SECTION_DESCRIPTOR *)calloc(
+		1, sizeof(CPAD_SECTION_DESCRIPTOR));
+	descriptor->Revision = (UINT16)cper_rand();
+	descriptor->SecValidMask = (1 << CPAD_SECTION_FRU_ID_VALID) |
+				   (1 << CPAD_SECTION_FRU_STRING_VALID) |
+				   (1 << CPAD_SECTION_URGENCY_VALID) |
+				   (1 << CPAD_SECTION_CONFIDENCE_VALID);
+	descriptor->Flags = 0;			   // Reserved
+	descriptor->SectionType = (EFI_GUID){ 0 }; //set later
+	descriptor->FruId = generate_random_guid();
+	descriptor->Urgency = generate_random_urgency();
+	descriptor->Confidence = generate_random_confidence();
+	generate_random_printable_string(descriptor->FruString,
+					 sizeof(descriptor->FruString));
+	descriptor->ActionID = action_id;
 
 	//Set length, offset from base record.
 	descriptor->SectionLength = (UINT32)lengths[index];
@@ -159,7 +163,8 @@ CPAD_SECTION_DESCRIPTOR *generate_cpad_section_descriptor(char *type,
 	} else {
 		//Find the appropriate GUID for this section name.
 		for (size_t i = 0; i < cpad_generator_definitions_len; i++) {
-			if (strcmp(type, cpad_generator_definitions[i].ShortName) ==
+			if (strcmp(type,
+				   cpad_generator_definitions[i].ShortName) ==
 			    0) {
 				memcpy(&descriptor->SectionType,
 				       cpad_generator_definitions[i].Guid,
@@ -192,12 +197,15 @@ size_t generate_cpad_section(void **location, char *type)
 	int min_size = 8;
 	int max_size = 1024;
 	if (strcmp(type, "unknown") == 0) {
-		length = generate_random_section(location, (cper_rand() % (max_size - min_size + 1)) + min_size);
+		length = generate_random_section(
+			location,
+			(cper_rand() % (max_size - min_size + 1)) + min_size);
 		section_generated = 1;
 	} else {
 		//Function defined section, switch on the type, generate accordingly.
 		for (size_t i = 0; i < cpad_generator_definitions_len; i++) {
-			if (strcmp(type, cpad_generator_definitions[i].ShortName) ==
+			if (strcmp(type,
+				   cpad_generator_definitions[i].ShortName) ==
 			    0) {
 				length = cpad_generator_definitions[i].Generate(
 					location);
@@ -217,15 +225,14 @@ size_t generate_cpad_section(void **location, char *type)
 	return length;
 }
 
-
 //Create random urgency value for CPAD sections
 UINT8 generate_random_urgency()
 {
-    return (UINT8)(cper_rand() % 2); //0 (not urgent) or 1 (urgent)
-} 
+	return (UINT8)(cper_rand() % 2); //0 (not urgent) or 1 (urgent)
+}
 
 //Create random confidence value for CPAD sections
 UINT8 generate_random_confidence()
 {
-    return (UINT8)(cper_rand() % 101); //0-100%
+	return (UINT8)(cper_rand() % 101); //0-100%
 }

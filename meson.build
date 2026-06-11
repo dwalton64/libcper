@@ -64,7 +64,7 @@ libcper_generate_cper_sources = files(
     'generator/sections/gen-section-ampere.c',
     'generator/sections/gen-section-arm-ras.c',
     'generator/sections/gen-section-arm.c',
-    'generator/sections/gen-section-platform-action-event.c',  #FIXME check that this is needed
+    'generator/sections/gen-section-platform-action-event.c',
     'generator/sections/gen-section-ccix-per.c',
     'generator/sections/gen-section-cxl-component.c',
     'generator/sections/gen-section-cxl-protocol.c',
@@ -146,7 +146,8 @@ libcper_generate_dep = declare_dependency(
     link_with: libcper_generate,
 )
 
-# FIXME: This creates a libcper cpad-generate library, should I combine the CPER and CPAD libraries?
+# CPAD generation is built as a separate library (cpad-generate) from the CPER
+# generation library (cper-generate) so consumers can link only what they need.
 libcper_generate_cpad_sources += files(
     'generator/cpad-generate.c',
     'generator/gen-utils.c',

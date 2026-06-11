@@ -92,7 +92,7 @@ void ir_generic_error_status_to_cper(
 /* CPAD-specific utility functions        */
 
 // CPAD Actions
-//The available severity types for CPER.
+//The available CPAD action names, indexed by Action ID.
 const char *CPAD_ACTION_NAMES[] = {
     [CPAD_ACTION_DO_NOTHING] 			= "Do Nothing",  // Can be used for testing CPAD routing
     [CPAD_ACTION_RESET_NO_POWER_CYCLE]  = "Reset",
@@ -102,7 +102,7 @@ const char *CPAD_ACTION_NAMES[] = {
     [CPAD_ACTION_REPLACE_PART]  		= "Replace Part"
 };
 
-//Returns the appropriate string for the given integer severity.
+//Returns the appropriate string for the given CPAD Action ID.
 const char *action_to_string(UINT16 action)
 {
 	if (action >= FIRST_PROPRIETARY_ACTION_ID) {
@@ -645,16 +645,17 @@ void add_int_hex_24(json_object *register_ir, const char *field_name,
 	add_int_hex_common(register_ir, field_name, value, 6);
 }
 
-// FIXME - this function was add_int_hex_64
-//         Are there any calls that actually need 64 bits?
 void add_int_hex_32(json_object *register_ir, const char *field_name,
 		    UINT64 value)
 {
 	add_int_hex_common(register_ir, field_name, value, 8);
 }
 
-// TODO, deduplicate with get_value_hex_64/32
-void get_value_hex_8(json_object *obj, const char *field_name, UINT8 *value_out)
+//Reads a "0x"-prefixed, big-endian hex string field of the given byte width and
+//writes the decoded value into value_out (num_bytes wide, host endianness).
+//Does nothing if the field is missing or malformed.
+static void get_value_hex_common(json_object *obj, const char *field_name,
+				 void *value_out, size_t num_bytes)
 {
 	json_object *value = json_object_object_get(obj, field_name);
 	if (!value) {
@@ -664,106 +665,70 @@ void get_value_hex_8(json_object *obj, const char *field_name, UINT8 *value_out)
 	if (!hex_string) {
 		return;
 	}
-	UINT8 byte;
 	size_t hex_string_len = strlen(hex_string);
-	if (hex_string_len != 4) {
+	//Expect "0x" followed by two hex digits per byte.
+	if (hex_string_len != (num_bytes * 2) + 2) {
 		return;
 	}
 	if (hex_string[0] != '0' || hex_string[1] != 'x') {
 		return;
 	}
 
-	if (hex_string_to_bytes(hex_string + 2, hex_string_len - 2, &byte, 1) !=
-	    1) {
+	UINT8 bytes[8];
+	if (num_bytes > sizeof(bytes)) {
 		return;
 	}
-	*value_out = byte;
+	if (hex_string_to_bytes(hex_string + 2, hex_string_len - 2, bytes,
+				num_bytes) != num_bytes) {
+		return;
+	}
+
+	UINT64 val = 0;
+	for (size_t i = 0; i < num_bytes; i++) {
+		val = (val << 8) | bytes[i];
+	}
+	switch (num_bytes) {
+	case 1: {
+		UINT8 v = (UINT8)val;
+		memcpy(value_out, &v, sizeof(v));
+		break;
+	}
+	case 2: {
+		UINT16 v = (UINT16)val;
+		memcpy(value_out, &v, sizeof(v));
+		break;
+	}
+	case 4: {
+		UINT32 v = (UINT32)val;
+		memcpy(value_out, &v, sizeof(v));
+		break;
+	}
+	case 8:
+		memcpy(value_out, &val, sizeof(val));
+		break;
+	default:
+		break;
+	}
+}
+
+void get_value_hex_8(json_object *obj, const char *field_name, UINT8 *value_out)
+{
+	get_value_hex_common(obj, field_name, value_out, 1);
 }
 
 void get_value_hex_16(json_object *obj, const char *field_name, void *value_out)
 {
-	json_object *value = json_object_object_get(obj, field_name);
-	if (!value) {
-		return;
-	}
-	const char *hex_string = json_object_get_string(value);
-	if (!hex_string) {
-		return;
-	}
-	UINT8 bytes[2];
-	size_t hex_string_len = strlen(hex_string);
-	if (hex_string_len != 6) {
-		return;
-	}
-	if (hex_string[0] != '0' || hex_string[1] != 'x') {
-		return;
-	}
-
-	if (hex_string_to_bytes(hex_string + 2, hex_string_len - 2, bytes,
-				sizeof(bytes)) != 2) {
-		return;
-	}
-	UINT16 val = (UINT16)bytes[0] << 8 | (UINT16)bytes[1];
-	memcpy(value_out, &val, sizeof(val));
+	get_value_hex_common(obj, field_name, value_out, 2);
 }
 
-// TODO, deduplicate with get_value_hex_64
 void get_value_hex_32(json_object *obj, const char *field_name, void *value_out)
 {
-	json_object *value = json_object_object_get(obj, field_name);
-	if (!value) {
-		return;
-	}
-	const char *hex_string = json_object_get_string(value);
-	if (!hex_string) {
-		return;
-	}
-	UINT8 bytes[4];
-	size_t hex_string_len = strlen(hex_string);
-	if (hex_string_len != 10) {
-		return;
-	}
-	if (hex_string[0] != '0' || hex_string[1] != 'x') {
-		return;
-	}
-
-	if (hex_string_to_bytes(hex_string + 2, hex_string_len - 2, bytes,
-				sizeof(bytes)) != 4) {
-		return;
-	}
-	UINT32 val = (UINT32)bytes[0] << 24 | (UINT32)bytes[1] << 16 |
-		     (UINT32)bytes[2] << 8 | (UINT32)bytes[3];
-	memcpy(value_out, &val, sizeof(val));
+	get_value_hex_common(obj, field_name, value_out, 4);
 }
 
 void get_value_hex_64(json_object *obj, const char *field_name, void *value_out)
 {
-	json_object *value = json_object_object_get(obj, field_name);
-	if (!value) {
-		return;
-	}
-	const char *hex_string = json_object_get_string(value);
-	if (!hex_string) {
-		return;
-	}
-	UINT8 bytes[8];
-	size_t hex_string_len = strlen(hex_string);
-	if (hex_string_len != 18) {
-		return;
-	}
-	if (hex_string[0] != '0' || hex_string[1] != 'x') {
-		return;
-	}
-
-	if (hex_string_to_bytes(hex_string + 2, hex_string_len - 2, bytes,
-				sizeof(bytes)) != 8) {
-		return;
-	}
-	UINT64 val = (UINT64)bytes[0] << 56 | (UINT64)bytes[1] << 48 |
-		     (UINT64)bytes[2] << 40 | (UINT64)bytes[3] << 32 |
-		     (UINT64)bytes[4] << 24 | (UINT64)bytes[5] << 16 |
-		     (UINT64)bytes[6] << 8 | (UINT64)bytes[7];
-	memcpy(value_out, &val, sizeof(val));
+	get_value_hex_common(obj, field_name, value_out, 8);
 }
 
 void add_int_hex_64(json_object *register_ir, const char *field_name,

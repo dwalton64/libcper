@@ -42,14 +42,13 @@ void generate_cper_record(char **types, UINT16 num_sections, FILE *out,
 	EFI_COMMON_ERROR_RECORD_HEADER *header =
 		(EFI_COMMON_ERROR_RECORD_HEADER *)calloc(
 			1, sizeof(EFI_COMMON_ERROR_RECORD_HEADER));
-	header->SignatureStart = 0x52455043; //CPER
+	header->SignatureStart = EFI_ERROR_RECORD_SIGNATURE_START; //CPER
 	header->SectionCount = num_sections;
-	header->SignatureEnd = 0xFFFFFFFF;
-	header->Flags = 4; //HW_ERROR_FLAGS_SIMULATED
+	header->SignatureEnd = EFI_ERROR_RECORD_SIGNATURE_END;
+	header->Flags = EFI_HW_ERROR_FLAGS_SIMULATED;
 	header->RecordID = (UINT64)rand();
 	
-	//FIXME: Probably want to delete this.
-	//Set header severity to 4 (Platform Action Event) if any section is platform-action-event
+	//Set header severity to Platform Action Event if any section is platform-action-event
 	int has_platform_action_event = 0;
 	for (int i = 0; i < num_sections; i++) {
 		if (strcmp(types[i], "platform-action-event") == 0) {
@@ -142,8 +141,7 @@ EFI_ERROR_SECTION_DESCRIPTOR *generate_section_descriptor(char *type,
 	descriptor->SecValidMask = 0x3;
 
 	//Set severity.
-	//For "platform-action-event" section, use severity 4 (Platform Action Event).
-	// FIXME Probably want to delete this.
+	//For "platform-action-event" section, use severity Platform Action Event.
 	if (strcmp(type, "platform-action-event") == 0) {
 		descriptor->Severity = EFI_GENERIC_ERROR_PLATFORM_ACTION_EVENT;
 	} else {

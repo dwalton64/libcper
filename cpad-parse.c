@@ -55,12 +55,11 @@ int cpad_header_valid(const char *cpad_buf, size_t size)
 	if (size < sizeof(CPAD_HEADER)) {
 		return 0;
 	}
-	CPAD_HEADER *header =
-		(CPAD_HEADER *)cpad_buf;
+	CPAD_HEADER *header = (CPAD_HEADER *)cpad_buf;
 	if (!header_signature_valid(header)) {
 		return 0;
 	}
-	return header_signature_valid(header);
+	return 1;
 }
 
 json_object *cpad_buf_to_ir(const unsigned char *cpad_buf, size_t size)
@@ -115,10 +114,10 @@ json_object *cpad_buf_to_ir(const unsigned char *cpad_buf, size_t size)
 				"Invalid CPADsection descriptor: Section offset > size.\n");
 			goto fail;
 		}
- 
-		if (section_descriptor->SectionLength <= 0) {
+
+		if (section_descriptor->SectionLength == 0) {
 			cper_print_log(
-				"Invalid CPAD section descriptor: Section length <= 0.\n");
+				"Invalid CPAD section descriptor: Section length is zero.\n");
 			goto fail;
 		}
 
@@ -173,8 +172,7 @@ json_object *cpad_to_ir(FILE *cpad_file)
 {
 	//Ensure this is really a CPAD log.
 	CPAD_HEADER header;
-	if (fread(&header, sizeof(CPAD_HEADER), 1,
-		  cpad_file) != 1) {
+	if (fread(&header, sizeof(CPAD_HEADER), 1, cpad_file) != 1) {
 		cper_print_log(
 			"Invalid CPAD file: Invalid length (log too short).\n");
 		return NULL;
@@ -237,12 +235,13 @@ json_object *cpad_header_to_ir(CPAD_HEADER *header)
 	json_object_object_add(header_ir, "sectionCount",
 			       json_object_new_int(header->SectionCount));
 
-	//CPAD Urgency	
+	//CPAD Urgency
 	json_object_object_add(header_ir, "urgency",
 			       json_object_new_int(header->Urgency));
 
 	//If a timestamp exists according to validation bits, then add it.
-	if (header->ValidationBits & (1 << EFI_ERROR_RECORD_HEADER_TIME_STAMP_VALID)) {
+	if (header->ValidationBits &
+	    (1 << EFI_ERROR_RECORD_HEADER_TIME_STAMP_VALID)) {
 		char timestamp_string[TIMESTAMP_LENGTH];
 		if (timestamp_to_string(timestamp_string, TIMESTAMP_LENGTH,
 					&header->TimeStamp) >= 0) {
@@ -262,13 +261,15 @@ json_object *cpad_header_to_ir(CPAD_HEADER *header)
 
 	// FIXME: Throw an error if platformID is not valid?  It is needed to route CPADs
 	//If a platform ID exists according to the validation bits, then add it.
-	if (header->ValidationBits & (1 << EFI_ERROR_RECORD_HEADER_PLATFORM_ID_VALID)) {
+	if (header->ValidationBits &
+	    (1 << EFI_ERROR_RECORD_HEADER_PLATFORM_ID_VALID)) {
 		add_guid(header_ir, "platformID", &header->PlatformID);
 	}
 
 	// FIXME: Throw an error if partitionID is not valid?  It is needed to route CPADs
 	//If a partition ID exists according to the validation bits, then add it.
-	if (header->ValidationBits & (1 << EFI_ERROR_RECORD_HEADER_PARTITION_ID_VALID)) {
+	if (header->ValidationBits &
+	    (1 << EFI_ERROR_RECORD_HEADER_PARTITION_ID_VALID)) {
 		add_guid(header_ir, "partitionID", &header->PartitionID);
 	}
 
@@ -327,28 +328,34 @@ cpad_section_descriptor_to_ir(CPAD_SECTION_DESCRIPTOR *section_descriptor)
 			       section_type);
 
 	//If validation bits indicate it exists, add FRU ID.
-	if (section_descriptor->SecValidMask & (1 << CPAD_SECTION_FRU_ID_VALID)) {
+	if (section_descriptor->SecValidMask &
+	    (1 << CPAD_SECTION_FRU_ID_VALID)) {
 		add_guid(section_descriptor_ir, "fruID",
 			 &section_descriptor->FruId);
 	}
 
 	//If validation bits indicate it exists, add FRU text.
-	if (section_descriptor->SecValidMask & (1 << CPAD_SECTION_FRU_STRING_VALID)) {
+	if (section_descriptor->SecValidMask &
+	    (1 << CPAD_SECTION_FRU_STRING_VALID)) {
 		add_untrusted_string(section_descriptor_ir, "fruText",
 				     section_descriptor->FruString,
 				     sizeof(section_descriptor->FruString));
 	}
 
 	//If validation bits indicate it exists, add CPAD Urgency.
-	if (section_descriptor->SecValidMask & (1 << CPAD_SECTION_URGENCY_VALID)) {
-		json_object_object_add(section_descriptor_ir, "urgency",
-				       json_object_new_int(section_descriptor->Urgency));
+	if (section_descriptor->SecValidMask &
+	    (1 << CPAD_SECTION_URGENCY_VALID)) {
+		json_object_object_add(
+			section_descriptor_ir, "urgency",
+			json_object_new_int(section_descriptor->Urgency));
 	}
 
 	//If validation bits indicate it exists, add CPAD Confidence.
-	if (section_descriptor->SecValidMask & (1 << CPAD_SECTION_CONFIDENCE_VALID)) {
-		json_object_object_add(section_descriptor_ir, "confidence",
-				       json_object_new_int(section_descriptor->Confidence));
+	if (section_descriptor->SecValidMask &
+	    (1 << CPAD_SECTION_CONFIDENCE_VALID)) {
+		json_object_object_add(
+			section_descriptor_ir, "confidence",
+			json_object_new_int(section_descriptor->Confidence));
 	}
 
 	//CPAD Action.
@@ -369,8 +376,8 @@ cpad_section_descriptor_to_ir(CPAD_SECTION_DESCRIPTOR *section_descriptor)
 	return section_descriptor_ir;
 }
 
-json_object *cpad_read_section(const unsigned char *cpad_section_buf, size_t size,
-			  CPAD_SECTION_DEFINITION *definition)
+json_object *cpad_read_section(const unsigned char *cpad_section_buf,
+			       size_t size, CPAD_SECTION_DEFINITION *definition)
 {
 	if (definition->ToIR == NULL) {
 		return NULL;
@@ -484,7 +491,7 @@ json_object *cpad_buf_single_section_to_ir(const unsigned char *cpad_buf,
 	json_object_object_add(ir, "sectionDescriptor", section_descriptor_ir);
 	section_begin = cpad_buf + section_descriptor->SectionOffset;
 
-	if (section_begin + section_descriptor->SectionLength >= cpad_end) {
+	if (section_begin + section_descriptor->SectionLength > cpad_end) {
 		json_object_put(ir);
 		//cper_print_log("Invalid CPAD file: Invalid section descriptor (section offset + length > size).\n");
 		return NULL;

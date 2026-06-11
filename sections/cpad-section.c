@@ -12,9 +12,8 @@
 //   Note that few standard CPAD sections are expected to be defined; most
 //   sections will be vendor-specific.
 CPAD_SECTION_DEFINITION cpad_section_definitions[] = {
-	{ &gEfiCpadOsGenericSectionGuid, "OS Generic",
-	  "GenericOS", cpad_section_os_generic_to_ir,
-	  ir_section_os_generic_to_cpad },
+	{ &gEfiCpadOsGenericSectionGuid, "OS Generic", "GenericOS",
+	  cpad_section_os_generic_to_ir, ir_section_os_generic_to_cpad },
 };
 const size_t cpad_section_definitions_len =
 	sizeof(cpad_section_definitions) / sizeof(CPAD_SECTION_DEFINITION);
