@@ -6,19 +6,19 @@
     },
     "sectionCount":1,
     "severity":{
-      "code":3,
-      "name":"Informational"
+      "code":4,
+      "name":"Platform Action Event"
     },
-    "recordLength":264,
-    "timestamp":"6441-01-01T03:00:08+00:00",
-    "timestampIsPrecise":false,
+    "recordLength":272,
+    "timestamp":"5290-05-16T13:00:29+00:00",
+    "timestampIsPrecise":true,
     "platformID":"00000000-0000-0000-0000-000000000000",
     "creatorID":"00000000-0000-0000-0000-000000000000",
     "notificationType":{
       "guid":"00000000-0000-0000-0000-000000000000",
       "type":"Unknown"
     },
-    "recordID":2114937732,
+    "recordID":1804289383,
     "flags":{
       "value":4,
       "name":"HW_ERROR_FLAGS_SIMULATED"
@@ -28,30 +28,30 @@
   "sectionDescriptors":[
     {
       "sectionOffset":200,
-      "sectionLength":64,
+      "sectionLength":72,
       "revision":{
-        "major":179,
-        "minor":221
+        "major":116,
+        "minor":132
       },
       "flags":{
-        "primary":false,
-        "containmentWarning":false,
+        "primary":true,
+        "containmentWarning":true,
         "reset":false,
-        "errorThresholdExceeded":true,
+        "errorThresholdExceeded":false,
         "resourceNotAccessible":true,
-        "latentError":true,
-        "propagated":false,
+        "latentError":false,
+        "propagated":true,
         "overflow":true
       },
       "sectionType":{
         "data":"c7d26a20-0c54-11f1-b370-00155d25b627",
         "type":"Platform Action Event"
       },
-      "fruID":"18ac7c14-8ac8-7807-d00e-09b2200af3c0",
-      "fruText":"\/Q~eei?MC9OtysRXO$(",
+      "fruID":"09ad6279-d444-8ae1-5cec-7b5cbb14b6ea",
+      "fruText":"{6\\Pavw[:mO4=ZvMD^b",
       "severity":{
-        "code":3,
-        "name":"Informational"
+        "code":4,
+        "name":"Platform Action Event"
       }
     }
   ],
@@ -59,14 +59,19 @@
     {
       "message":"A Platform Action Event occurred",
       "PlatformActionEvent":{
-        "recordIdValid":false,
-        "sectionIndexValid":false,
-        "actionIdValid":false,
-        "actionReturnCodeValid":false,
+        "recordIdValid":true,
+        "sectionIndexValid":true,
+        "actionIdValid":true,
+        "actionReturnCodeValid":true,
         "additionalContextValid":false,
-        "cpadPlatformID":"dcb95d8c-6708-64b6-717d-29a065b75ab2",
-        "cpadPartitionID":"7f493e41-7221-2b50-2440-b13ac1541d7c",
-        "cpadCreatorID":"13c08615-d514-3526-0638-e960904294dc"
+        "actionReturnCode":"0xCF",
+        "actionReturnReasonCode":"0x55",
+        "cpadPlatformID":"34b0dab1-4502-412f-e5ed-ece809b7a425",
+        "cpadPartitionID":"69edbe65-5fd5-62cf-61d2-21c1161f8345",
+        "cpadCreatorID":"8af00b88-8748-afe8-89d9-03bd190aca40",
+        "cpadRecordId":"0x818F0D9A67B3CD04",
+        "cpadActionId":"0x03AD",
+        "cpadSectionIndex":1037125866
       }
     }
   ]

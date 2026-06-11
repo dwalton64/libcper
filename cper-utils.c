@@ -23,7 +23,8 @@ const char *CPER_SEVERITY_TYPES[] = {
     [EFI_GENERIC_ERROR_RECOVERABLE] = "Recoverable",
     [EFI_GENERIC_ERROR_FATAL]       = "Fatal",
     [EFI_GENERIC_ERROR_CORRECTED]   = "Corrected",
-    [EFI_GENERIC_ERROR_INFO]        = "Informational"
+    [EFI_GENERIC_ERROR_INFO]        = "Informational",
+    [EFI_GENERIC_ERROR_PLATFORM_ACTION_EVENT] = "Platform Action Event"
 };
 
 //Returns the appropriate string for the given integer severity.

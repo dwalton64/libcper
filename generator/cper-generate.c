@@ -49,7 +49,7 @@ void generate_cper_record(char **types, UINT16 num_sections, FILE *out,
 	header->RecordID = (UINT64)rand();
 	
 	//FIXME: Probably want to delete this.
-	//Set header severity to 3 (informational) if any section is platform-action-event
+	//Set header severity to 4 (Platform Action Event) if any section is platform-action-event
 	int has_platform_action_event = 0;
 	for (int i = 0; i < num_sections; i++) {
 		if (strcmp(types[i], "platform-action-event") == 0) {
@@ -57,7 +57,9 @@ void generate_cper_record(char **types, UINT16 num_sections, FILE *out,
 			break;
 		}
 	}
-	header->ErrorSeverity = has_platform_action_event ? 3 : (rand() % 4);
+	header->ErrorSeverity = has_platform_action_event ?
+					EFI_GENERIC_ERROR_PLATFORM_ACTION_EVENT :
+					(rand() % 4);
 
 	//Generate a valid timestamp.
 	generate_random_timestamp(&header->TimeStamp);
@@ -140,10 +142,10 @@ EFI_ERROR_SECTION_DESCRIPTOR *generate_section_descriptor(char *type,
 	descriptor->SecValidMask = 0x3;
 
 	//Set severity.
-	//For "platform-action-event" section, use severity 3 (informational).
+	//For "platform-action-event" section, use severity 4 (Platform Action Event).
 	// FIXME Probably want to delete this.
 	if (strcmp(type, "platform-action-event") == 0) {
-		descriptor->Severity = 3; //EFI_GENERIC_ERROR_INFO
+		descriptor->Severity = EFI_GENERIC_ERROR_PLATFORM_ACTION_EVENT;
 	} else {
 		descriptor->Severity = rand() % 4;
 	}

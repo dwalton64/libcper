@@ -34,6 +34,7 @@ extern "C" {
 #define EFI_GENERIC_ERROR_FATAL	      0x00000001
 #define EFI_GENERIC_ERROR_CORRECTED   0x00000002
 #define EFI_GENERIC_ERROR_INFO	      0x00000003
+#define EFI_GENERIC_ERROR_PLATFORM_ACTION_EVENT 0x00000004
 ///@}
 
 ///
@@ -1842,37 +1843,55 @@ static const EFI_GUID EFI_ARM_RAS_KVP_UUID_MPAM_PARTID = {
 ///@}
 
 ///
-/// Action Return Codes for Platform Action Events
-/// Used to indicate the status of a CPAD action taken by a RAS API endpoint.
+/// Action Return Codes for Platform Action Events (RAS API spec Table 12).
+/// Indicates the high-level status of a CPAD action taken by a RAS API endpoint.
 ///@{
-#define EFI_PLATFORM_ACTION_RETURN_CODE_SUCCESS 			0x00
-#define EFI_PLATFORM_ACTION_RETURN_CODE_UNKNOWN_ERR 		0x01
-#define EFI_PLATFORM_ACTION_RETURN_CODE_EP_NOT_READY 		0x02
-#define EFI_PLATFORM_ACTION_RETURN_CODE_INVALID_CPAD 		0x03
-#define EFI_PLATFORM_ACTION_RETURN_CODE_INCORRECT_EP 		0x04
-#define EFI_PLATFORM_ACTION_RETURN_CODE_INVALID_FRUID 		0x05
-#define EFI_PLATFORM_ACTION_RETURN_CODE_UNSUPPORTED_ACTION 	0x06
-#define EFI_PLATFORM_ACTION_RETURN_CODE_UNCONFIGURED_ACTION	0x07
-#define EFI_PLATFORM_ACTION_RETURN_CODE_INVALID_ACTION_DATA	0x08
-#define EFI_PLATFORM_ACTION_RETURN_CODE_TIMEOUT			 	0x09
-#define EFI_PLATFORM_ACTION_RETURN_CODE_DEPENDENCY_FAILED 	0x0A
-#define EFI_PLATFORM_ACTION_RETURN_CODE_PRECONDITION_FAILED	0x0B
+#define EFI_PLATFORM_ACTION_RETURN_CODE_SUCCESS         0x00
+#define EFI_PLATFORM_ACTION_RETURN_CODE_FAILED          0x01
+#define EFI_PLATFORM_ACTION_RETURN_CODE_PENDING         0x02
+#define EFI_PLATFORM_ACTION_RETURN_CODE_POLICY_REJECTED 0x03
+//0x04 - 0xFF Reserved
 ///@}
 
-// Vendor specific return codes start with 0x80 and are specific to a CreatorID
+///
+/// Action Return Reason Codes for Platform Action Events (RAS API spec
+/// Tables 13-16). These provide additional detail about the Action Return
+/// Code and are interpreted relative to it.
+///
+/// The values below correspond to the Action Failed (0x01) case (Table 14).
+/// For the Success (0x00), Pending (0x02) and Policy Rejected (0x03) cases the
+/// only standard reason code is 0x00 (no reason code).
+///@{
+#define EFI_PLATFORM_ACTION_REASON_CODE_NONE                  0x00
+#define EFI_PLATFORM_ACTION_REASON_CODE_UNKNOWN_ERR           0x01
+#define EFI_PLATFORM_ACTION_REASON_CODE_EP_NOT_READY          0x02
+#define EFI_PLATFORM_ACTION_REASON_CODE_INVALID_CPAD          0x03
+#define EFI_PLATFORM_ACTION_REASON_CODE_INCORRECT_EP          0x04
+#define EFI_PLATFORM_ACTION_REASON_CODE_INVALID_FRUID         0x05
+#define EFI_PLATFORM_ACTION_REASON_CODE_UNSUPPORTED_ACTION    0x06
+#define EFI_PLATFORM_ACTION_REASON_CODE_UNCONFIGURED_ACTION   0x07
+#define EFI_PLATFORM_ACTION_REASON_CODE_INVALID_ACTION_DATA   0x08
+#define EFI_PLATFORM_ACTION_REASON_CODE_TIMEOUT               0x09
+#define EFI_PLATFORM_ACTION_REASON_CODE_DEPENDENCY_FAILED     0x0A
+#define EFI_PLATFORM_ACTION_REASON_CODE_PRECONDITION_FAILED   0x0B
+///@}
+
+// Vendor specific return/reason codes start with 0x80 and are specific to a CreatorID
 #define EFI_PLATFORM_ACTION_RETURN_FIRST_VENDOR_STATUS	 	0x80
 
 
 typedef struct {
-	UINT8      ValidationBits;
+	UINT16     ValidationBits;
 	UINT8      ActionReturnCode;
+	UINT8      ActionReturnReasonCode;
+	UINT16     CpadActionId;
+	UINT8      Reserved[6];
+	UINT32     CpadSectionDescriptorIndex;
 	EFI_GUID   CpadPlatformId;
 	EFI_GUID   CpadPartitionId;
-    EFI_GUID   CpadCreatorId;
+	EFI_GUID   CpadCreatorId;
 	UINT64     CpadRecordId;
-	UINT16     CpadActionId;
-	UINT32     CpadSectionDescriptorIndex;
-	// Vendor Specific Data may follow, after this structure.
+	// Vendor Specific Data (Additional Context) may follow, after this structure.
 } __attribute__((packed, aligned(1))) EFI_PLATFORM_ACTION_EVENT;
 
 #pragma pack(pop)

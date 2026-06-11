@@ -128,7 +128,7 @@ void add_dict(json_object *register_ir, const char *field_name, UINT64 value,
 	      const char *dict[], size_t dict_size);
 
 //The available severity types for CPER.
-extern const char *CPER_SEVERITY_TYPES[4];
+extern const char *CPER_SEVERITY_TYPES[5];
 extern const char *CPER_URGENCY_TYPES[1];
 
 #ifdef __cplusplus

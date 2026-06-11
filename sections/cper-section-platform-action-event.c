@@ -13,7 +13,6 @@
 #include <libcper/log.h>
 #include <libcper/base64.h>
 
-//FIXME: Change to use the format defined in Cper.h
 
 //Converts the given Info-action-ppr CPER section into JSON IR.
 json_object *cper_section_platform_action_event_to_ir(const UINT8 *section, UINT32 size, char **desc_string)
@@ -45,16 +44,17 @@ json_object *cper_section_platform_action_event_to_ir(const UINT8 *section, UINT
 	EFI_PLATFORM_ACTION_EVENT *action_event = (EFI_PLATFORM_ACTION_EVENT *)section;
 	json_object *section_ir = json_object_new_object();
 	
-	//UINT8      ValidationBits;
-	add_bool(section_ir, "recordIdValid", action_event->ValidationBits & EFI_PLATFORM_ACTION_RECORD_ID_VALID);
-	add_bool(section_ir, "sectionIndexValid", action_event->ValidationBits & EFI_PLATFORM_ACTION_CPAD_SECTION_INDEX_VALID);
-	add_bool(section_ir, "actionIdValid", action_event->ValidationBits & EFI_PLATFORM_ACTION_ACTION_ID_VALID);
-	add_bool(section_ir, "actionReturnCodeValid", action_event->ValidationBits & EFI_PLATFORM_ACTION_ACTION_RETURN_CODE_VALID);
-	add_bool(section_ir, "additionalContextValid", action_event->ValidationBits & EFI_PLATFORM_ACTION_ADDITIONAL_CONTEXT_VALID);	
+	//UINT16     ValidationBits;
+	add_bool(section_ir, "recordIdValid", !!(action_event->ValidationBits & EFI_PLATFORM_ACTION_RECORD_ID_VALID));
+	add_bool(section_ir, "sectionIndexValid", !!(action_event->ValidationBits & EFI_PLATFORM_ACTION_CPAD_SECTION_INDEX_VALID));
+	add_bool(section_ir, "actionIdValid", !!(action_event->ValidationBits & EFI_PLATFORM_ACTION_ACTION_ID_VALID));
+	add_bool(section_ir, "actionReturnCodeValid", !!(action_event->ValidationBits & EFI_PLATFORM_ACTION_ACTION_RETURN_CODE_VALID));
+	add_bool(section_ir, "additionalContextValid", !!(action_event->ValidationBits & EFI_PLATFORM_ACTION_ADDITIONAL_CONTEXT_VALID));	
 
 	//UINT8      ActionReturnCode;
 	if (action_event->ValidationBits & EFI_PLATFORM_ACTION_ACTION_RETURN_CODE_VALID) {
 		add_int_hex_8(section_ir, "actionReturnCode", action_event->ActionReturnCode);
+		add_int_hex_8(section_ir, "actionReturnReasonCode", action_event->ActionReturnReasonCode);
 	}
 	
 	// Add GUIDs from the original CPAD that triggered this event
@@ -142,6 +142,9 @@ void ir_section_platform_action_event_to_cper(json_object *section, FILE *out)
 
 	// Action Return Code
 	get_value_hex_8(section, "actionReturnCode", &section_cper->ActionReturnCode);
+
+	// Action Return Reason Code
+	get_value_hex_8(section, "actionReturnReasonCode", &section_cper->ActionReturnReasonCode);
 
 	// Read GUIDs from the JSON IR and populate the CPER structure
 	string_to_guid(&section_cper->CpadPlatformId, json_object_get_string(json_object_object_get(section, "cpadPlatformID")));
