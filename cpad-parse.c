@@ -405,8 +405,8 @@ CPAD_SECTION_DEFINITION *cpad_select_section_by_guid(EFI_GUID *guid)
 	// want coverage of the section failed to convert code, so treat index ==
 	// size as section failed to convert.
 #ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
-	if (i == section_definitions_len) {
-		i = guid->Data1 % (section_definitions_len + 1);
+	if (i == cpad_section_definitions_len) {
+		i = guid->Data1 % (cpad_section_definitions_len + 1);
 	}
 #endif
 	if (i < cpad_section_definitions_len) {
