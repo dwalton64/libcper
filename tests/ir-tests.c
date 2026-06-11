@@ -35,6 +35,29 @@ static const int GEN_EXAMPLES = 0;
 static const char *cper_ext = "cperhex";
 static const char *json_ext = "json";
 
+//Returns a ready-for-use memory stream containing a CPER record with the given sections inside.
+static FILE *generate_record_memstream(const char **types, UINT16 num_types,
+				       char **buf, size_t *buf_size,
+				       int single_section,
+				       GEN_VALID_BITS_TEST_TYPE validBitsType)
+{
+	//Open a memory stream.
+	FILE *stream = open_memstream(buf, buf_size);
+
+	//Generate a section to the stream, close & return.
+	if (!single_section) {
+		generate_cper_record((char **)(types), num_types, stream,
+				     validBitsType);
+	} else {
+		generate_single_section_record((char *)(types[0]), stream,
+					       validBitsType);
+	}
+	fclose(stream);
+
+	//Return fmemopen() buffer for reading.
+	return fmemopen(*buf, *buf_size, "r");
+}
+
 struct file_info {
 	char *cper_out;
 	char *json_out;

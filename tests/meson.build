@@ -19,6 +19,21 @@ cper_tests = executable(
 )
 test('test-cper-tests', cper_tests)
 
+cpad_tests = executable(
+    'cpad-tests',
+    'cpad-ir-tests.c',
+    test_sources,
+    implicit_include_directories: false,
+    include_directories: include_directories(test_include_dirs),
+    dependencies: [
+        json_c_dep,
+        jsonc_validator_dep,
+        libcper_parse_dep,
+        libcper_generate_cpad_dep,
+    ],
+)
+test('test-cpad-tests', cpad_tests)
+
 cc = meson.get_compiler('c')
 
 # Fuzzing only works on linux at this moment.  osx clang doesn't have leak detector

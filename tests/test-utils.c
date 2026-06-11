@@ -48,30 +48,22 @@ static const char *optional_props[] = {
 	"transactionType"
 };
 
+// Optional / mutually-exclusive properties for CPAD schema validation.
+// Only one section body key is present per section, so they cannot all be
+// required at once.
+static const char *cpad_optional_props[] = {
+	"GenericOS",
+	"Unknown",
+};
+
 //Returns a ready-for-use memory stream containing a CPER record with the given sections inside.
-FILE *generate_record_memstream(const char **types, UINT16 num_types,
-				char **buf, size_t *buf_size,
-				int single_section,
-				GEN_VALID_BITS_TEST_TYPE validBitsType)
-{
-	//Open a memory stream.
-	FILE *stream = open_memstream(buf, buf_size);
+//(Defined in ir-tests.c, which links the CPER generate library.)
 
-	//Generate a section to the stream, close & return.
-	if (!single_section) {
-		generate_cper_record((char **)(types), num_types, stream,
-				     validBitsType);
-	} else {
-		generate_single_section_record((char *)(types[0]), stream,
-					       validBitsType);
-	}
-	fclose(stream);
+//Returns a ready-for-use memory stream containing a CPAD record with the given sections inside.
+//(Defined in cpad-ir-tests.c, which links the CPAD generate library.)
 
-	//Return fmemopen() buffer for reading.
-	return fmemopen(*buf, *buf_size, "r");
-}
-
-int iterate_make_required_props(json_object *jsonSchema, int all_valid_bits)
+int iterate_make_required_props(json_object *jsonSchema, int all_valid_bits,
+				const char **opt_props, size_t opt_props_len)
 {
 	//properties
 	json_object *properties =
@@ -85,11 +77,8 @@ int iterate_make_required_props(json_object *jsonSchema, int all_valid_bits)
 		{
 			(void)property_value;
 			int add_to_required = 1;
-			size_t num = sizeof(optional_props) /
-				     sizeof(optional_props[0]);
-			for (size_t i = 0; i < num; i++) {
-				if (strcmp(optional_props[i], property_name) ==
-				    0) {
+			for (size_t i = 0; i < opt_props_len; i++) {
+				if (strcmp(opt_props[i], property_name) == 0) {
 					add_to_required = 0;
 					break;
 				}
@@ -107,8 +96,9 @@ int iterate_make_required_props(json_object *jsonSchema, int all_valid_bits)
 					   property_value2)
 		{
 			(void)property_name2;
-			if (iterate_make_required_props(property_value2,
-							all_valid_bits) < 0) {
+			if (iterate_make_required_props(
+				    property_value2, all_valid_bits, opt_props,
+				    opt_props_len) < 0) {
 				json_object_put(requrired_arr);
 				return -1;
 			}
@@ -151,8 +141,9 @@ int iterate_make_required_props(json_object *jsonSchema, int all_valid_bits)
 				return -1;
 			}
 
-			if (iterate_make_required_props(ref_obj,
-							all_valid_bits) < 0) {
+			if (iterate_make_required_props(ref_obj, all_valid_bits,
+							opt_props,
+							opt_props_len) < 0) {
 				json_object_put(ref_obj);
 				return -1;
 			}
@@ -177,8 +168,9 @@ int iterate_make_required_props(json_object *jsonSchema, int all_valid_bits)
 
 		for (size_t i = 0; i < num_elements; i++) {
 			json_object *obj = json_object_array_get_idx(oneOf, i);
-			if (iterate_make_required_props(obj, all_valid_bits) <
-			    0) {
+			if (iterate_make_required_props(obj, all_valid_bits,
+							opt_props,
+							opt_props_len) < 0) {
 				return -1;
 			}
 		}
@@ -190,8 +182,9 @@ int iterate_make_required_props(json_object *jsonSchema, int all_valid_bits)
 		json_object_object_foreach(items, key, val)
 		{
 			(void)key;
-			if (iterate_make_required_props(val, all_valid_bits) <
-			    0) {
+			if (iterate_make_required_props(val, all_valid_bits,
+							opt_props,
+							opt_props_len) < 0) {
 				return -1;
 			}
 		}
@@ -200,15 +193,10 @@ int iterate_make_required_props(json_object *jsonSchema, int all_valid_bits)
 	return 1;
 }
 
-int schema_validate_from_file(json_object *to_test, int single_section,
-			      int all_valid_bits)
+static int schema_validate_with(const char *schema_file, json_object *to_test,
+				int all_valid_bits, const char **opt_props,
+				size_t opt_props_len)
 {
-	const char *schema_file;
-	if (single_section) {
-		schema_file = "cper-json-section-log.json";
-	} else {
-		schema_file = "cper-json-full-log.json";
-	}
 	printf("start schema_validate_from_file\n");
 	int size = strlen(schema_file) + 1 + strlen(LIBCPER_JSON_SPEC) + 1;
 	char *schema_path = malloc(size);
@@ -222,7 +210,8 @@ int schema_validate_from_file(json_object *to_test, int single_section,
 		return 0;
 	}
 	printf("end iterate_make_required_props\n");
-	if (iterate_make_required_props(schema, all_valid_bits) < 0) {
+	if (iterate_make_required_props(schema, all_valid_bits, opt_props,
+					opt_props_len) < 0) {
 		cper_print_log("Failed to make required props\n");
 		json_object_put(schema);
 		free(schema_path);
@@ -243,4 +232,32 @@ int schema_validate_from_file(json_object *to_test, int single_section,
 	json_object_put(schema);
 	free(schema_path);
 	return 0;
+}
+
+int schema_validate_from_file(json_object *to_test, int single_section,
+			      int all_valid_bits)
+{
+	const char *schema_file;
+	if (single_section) {
+		schema_file = "cper-json-section-log.json";
+	} else {
+		schema_file = "cper-json-full-log.json";
+	}
+	return schema_validate_with(
+		schema_file, to_test, all_valid_bits, optional_props,
+		sizeof(optional_props) / sizeof(optional_props[0]));
+}
+
+int schema_validate_cpad_from_file(json_object *to_test, int single_section,
+				   int all_valid_bits)
+{
+	const char *schema_file;
+	if (single_section) {
+		schema_file = "cpad-json-section-log.json";
+	} else {
+		schema_file = "cpad-json-full-log.json";
+	}
+	return schema_validate_with(
+		schema_file, to_test, all_valid_bits, cpad_optional_props,
+		sizeof(cpad_optional_props) / sizeof(cpad_optional_props[0]));
 }

@@ -1,0 +1,52 @@
+{
+  "header":{
+    "revision":{
+      "major":1,
+      "minor":0
+    },
+    "sectionCount":1,
+    "urgency":1,
+    "timestamp":"3504-10-25T14:00:11+00:00",
+    "timestampIsPrecise":true,
+    "recordLength":242,
+    "platformID":"273c04d2-f721-8dc1-161f-83458848e889",
+    "partitionID":"7acf2dd9-0e03-d5bd-190a-ca409a04adea",
+    "creatorID":"8d4c530c-c3da-5b2c-20b4-1d535ff8b7f5",
+    "recordID":1932940572327388495,
+    "flags":0
+  },
+  "sectionDescriptors":[
+    {
+      "sectionOffset":202,
+      "sectionLength":40,
+      "revision":{
+        "major":72,
+        "minor":154
+      },
+      "flags":0,
+      "sectionType":{
+        "data":"6acbe736-dae8-11f0-ab29-00155df8f0e6",
+        "type":"OS Generic"
+      },
+      "fruID":"ee926c85-3d84-3174-ef42-d315160a3bc0",
+      "fruText":"ujndpouknteuerjbbik",
+      "urgency":1,
+      "confidence":55,
+      "actionID":{
+        "code":"0x0005",
+        "name":"Replace Part"
+      }
+    }
+  ],
+  "sections":[
+    {
+      "GenericOS":{
+        "operation":11965012870124743253,
+        "targetAddress":3796774943161271554,
+        "parameter1":14479144475780049381,
+        "parameter2":10195643700142767084,
+        "parameter3":369159827607075593
+      }
+    }
+  ]
+}

@@ -15,13 +15,11 @@ extern "C" {
 // all fields are valid
 enum AddRequiredProps { AddRequired, NoModify };
 
-FILE *generate_record_memstream(const char **types, UINT16 num_types,
-				char **buf, size_t *buf_size,
-				int single_section,
-				GEN_VALID_BITS_TEST_TYPE validBitsType);
-
 int schema_validate_from_file(json_object *to_test, int single_section,
 			      int all_valid_bits);
+
+int schema_validate_cpad_from_file(json_object *to_test, int single_section,
+				   int all_valid_bits);
 
 #ifdef __cplusplus
 }
