@@ -1,22 +1,17 @@
 {
   "header":{
     "revision":{
-      "major":0,
-      "minor":9
+      "major":1,
+      "minor":0
     },
     "sectionCount":1,
     "urgency":0,
-    "confidence":51,
     "timestamp":"7526-11-03T10:00:22+00:00",
     "timestampIsPrecise":false,
     "recordLength":539,
     "platformID":"9ef71594-dd76-31f9-4f6f-d5ab4aa041a2",
     "partitionID":"47e03c1e-59cf-d1bf-8da3-1161de0165ab",
     "creatorID":"079a7204-0bc9-5495-9130-774cfc4b7d20",
-    "notificationType":{
-      "guid":"441e4a39-be35-9be8-cfdb-8344e7dc471d",
-      "type":"Unknown"
-    },
     "recordID":364322276907527579,
     "flags":0
   },

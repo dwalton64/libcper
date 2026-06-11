@@ -7,10 +7,8 @@
         "revision",
         "sectionCount",
         "urgency",
-        "confidence",
         "recordLength",
         "creatorID",
-        "notificationType",
         "recordID",
         "flags"
     ],
@@ -42,11 +40,6 @@
             "description": "Indicates the urgency of the action. 0 = not urgent, 1 = urgent.",
             "minimum": 0
         },
-        "confidence": {
-            "type": "integer",
-            "description": "Confidence level of the action data, 0-100%.",
-            "minimum": 0
-        },
         "recordLength": {
             "type": "integer",
             "description": "The size of the actual CPAD record including headers, section descriptors, and section bodies.",
@@ -72,28 +65,13 @@
             "type": "string",
             "description": "A GUID indicating the creator of the CPAD record."
         },
-        "notificationType": {
-            "type": "object",
-            "description": "A pre-assigned GUID value indicating the record association with a notification type.",
-            "required": ["guid", "type"],
-            "additionalProperties": false,
-            "properties": {
-                "guid": {
-                    "type": "string",
-                    "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
-                },
-                "type": {
-                    "type": "string"
-                }
-            }
-        },
         "recordID": {
             "type": "integer",
             "description": "A value that, when combined with the Creator ID, uniquely identifies the CPAD record."
         },
         "flags": {
             "type": "integer",
-            "description": "Reserved flags field."
+            "description": "CPER-inherited flags bitfield. Bit 2 = simulated (intentionally injected error)."
         }
     }
 }

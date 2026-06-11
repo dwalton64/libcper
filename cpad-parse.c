@@ -241,10 +241,6 @@ json_object *cpad_header_to_ir(CPAD_HEADER *header)
 	json_object_object_add(header_ir, "urgency",
 			       json_object_new_int(header->Urgency));
 
-	//CPAD Confidence.
-	json_object_object_add(header_ir, "confidence",
-			       json_object_new_int(header->Confidence));
-
 	//If a timestamp exists according to validation bits, then add it.
 	if (header->ValidationBits & (1 << EFI_ERROR_RECORD_HEADER_TIME_STAMP_VALID)) {
 		char timestamp_string[TIMESTAMP_LENGTH];
@@ -279,24 +275,11 @@ json_object *cpad_header_to_ir(CPAD_HEADER *header)
 	//Creator ID of the header.
 	add_guid(header_ir, "creatorID", &header->CreatorID);
 
-	//Notification type for the header. Some defined types are available.
-	json_object *notification_type = json_object_new_object();
-	add_guid(notification_type, "guid", &header->NotificationType);
-
-	//Add the human readable notification type if possible.
-	const char *notification_type_readable = "Unknown";
-
-	json_object_object_add(
-		notification_type, "type",
-		json_object_new_string(notification_type_readable));
-	json_object_object_add(header_ir, "notificationType",
-			       notification_type);
-
 	//The record ID for this record, unique on a given system.
 	json_object_object_add(header_ir, "recordID",
 			       json_object_new_uint64(header->RecordID));
 
-	//Flags. Currently Reserved field, read as uint32.
+	//Flags. CPER-inherited bitfield, read as uint32.
 	json_object_object_add(header_ir, "flags",
 			       json_object_new_uint64(header->Flags));
 

@@ -50,16 +50,14 @@ void generate_cpad_record(char **types, UINT16 *action_ids, UINT16 num_sections,
 	header->SignatureEnd = CPAD_SIGNATURE_END;
     header->SectionCount = num_sections;
     header->Urgency = CPAD_URGENCY_NOT_URGENT;  //set later depending on section urgencies
-    header->Confidence = 0;                        //set later depending on section confidences
     header->ValidationBits = 0x7; //PlatformID, PartitionID, TimeStamp valid
     // RecordLength filled later
 	generate_random_timestamp(&header->TimeStamp);
     header->PlatformID = generate_random_guid();
     header->PartitionID = generate_random_guid();
     header->CreatorID = generate_random_guid();
-    header->NotificationType = generate_random_guid();
 	header->RecordID = cper_rand64();
-    header->Flags = 0; // These are reserved
+    header->Flags = 0; // CPER-inherited flags; default zero
 
   
 	//Generate the section descriptors given the number of sections.
@@ -71,9 +69,6 @@ void generate_cpad_record(char **types, UINT16 *action_ids, UINT16 num_sections,
         if (section_descriptors[i]->Urgency == CPAD_URGENCY_URGENT) {
             header->Urgency = CPAD_URGENCY_URGENT; // If any section is urgent, set header urgent
         }
-        if (section_descriptors[i]->Confidence > header->Confidence) {
-            header->Confidence = section_descriptors[i]->Confidence; // Set header confidence to max of any section's confidence
-        }   
 	}
 
 	//Calculate total length of structure, set in header.

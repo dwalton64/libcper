@@ -112,10 +112,6 @@ void ir_header_to_cpad(json_object *header_ir,
 	json_object *urgency = json_object_object_get(header_ir, "urgency");
 	header->Urgency = (UINT8)json_object_get_int(urgency);
 
-	//CPAD Confidence.
-	UINT64 confidence = json_object_get_uint64(json_object_object_get(header_ir, "confidence"));
-	header->Confidence = (UINT8)confidence;
-
 	//Validation bits.
 	ValidationTypes ui32Type = { UINT_32T, .value.ui32 = 0 };
 	struct json_object *obj = NULL;
@@ -156,18 +152,11 @@ void ir_header_to_cpad(json_object *header_ir,
 		       json_object_get_string(
 			       json_object_object_get(header_ir, "creatorID")));
 
-	//Notification type.
-	json_object *notification_type =
-		json_object_object_get(header_ir, "notificationType");
-	string_to_guid(&header->NotificationType,
-		       json_object_get_string(json_object_object_get(
-			       notification_type, "guid")));
-
 	//Record ID
 	header->RecordID = json_object_get_uint64(
 		json_object_object_get(header_ir, "recordID"));
 
-	//Flags.  Currently a reserved field, are read as uint32.
+	//Flags.  CPER-inherited bitfield, read as uint32.
 	header->Flags = (UINT32)json_object_get_uint64(
 		json_object_object_get(header_ir, "flags"));
 
