@@ -229,11 +229,25 @@ endif
 
 if get_option('python').allowed()
     py = import('python').find_installation(pure: false)
-    py.extension_module(
+    pycper_ext = py.extension_module(
         'cper',
         'pycper.c',
         c_args: ['-DLIBCPER_PYTHON'],
         dependencies: [libcper_parse_dep, json_c_dep],
         install: true,
     )
+
+    if get_option('tests').allowed() and not meson.is_subproject()
+        test(
+            'test-python',
+            py,
+            args: [files('tests/test_pycper.py')],
+            env: {
+                'PYTHONPATH': meson.current_build_dir(),
+                'LD_LIBRARY_PATH': meson.current_build_dir(),
+                'LIBCPER_EXAMPLES': example_dir,
+            },
+            depends: pycper_ext,
+        )
+    endif
 endif
