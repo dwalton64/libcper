@@ -1,0 +1,28 @@
+{
+    "$id": "cpad-json-section-log",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "description": "A single CPAD section with its descriptor represented as JSON.",
+    "required": ["sectionDescriptor", "section"],
+    "additionalProperties": false,
+    "properties": {
+        "sectionDescriptor": {
+            "$ref": "./cpad-json-section-descriptor.json"
+        },
+        "section": {
+            "type": "object",
+            "minProperties": 1,
+            "maxProperties": 1,
+            "required": [],
+            "additionalProperties": false,
+            "properties": {
+                "GenericOS": {
+                    "$ref": "./sections/cpad-os-generic.json"
+                },
+                "Unknown": {
+                    "$ref": "./sections/cper-unknown.json"
+                }
+            }
+        }
+    }
+}

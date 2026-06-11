@@ -1,0 +1,95 @@
+{
+    "$id": "cpad-json-section-descriptor",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "description": "CPAD Section Descriptor",
+    "required": [
+        "sectionOffset",
+        "sectionLength",
+        "revision",
+        "flags",
+        "sectionType",
+        "actionID"
+    ],
+    "additionalProperties": false,
+    "properties": {
+        "sectionOffset": {
+            "type": "integer",
+            "description": "Offset in bytes of the section body from the base of the record header."
+        },
+        "sectionLength": {
+            "type": "integer",
+            "description": "The length in bytes of the section body."
+        },
+        "revision": {
+            "type": "object",
+            "description": "A 2-byte field representing a major and minor version number for the section definition.",
+            "required": ["major", "minor"],
+            "additionalProperties": false,
+            "properties": {
+                "major": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "minor": {
+                    "type": "integer",
+                    "minimum": 0
+                }
+            }
+        },
+        "flags": {
+            "type": "integer",
+            "description": "Reserved flags field."
+        },
+        "sectionType": {
+            "type": "object",
+            "description": "A GUID indicating the section type.",
+            "required": ["data", "type"],
+            "additionalProperties": false,
+            "properties": {
+                "data": {
+                    "type": "string",
+                    "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "fruID": {
+            "type": "string",
+            "description": "GUID representing the FRU ID for the section."
+        },
+        "fruText": {
+            "type": "string",
+            "description": "A string identifying the FRU hardware."
+        },
+        "urgency": {
+            "type": "integer",
+            "description": "Urgency of the section. 0 = not urgent, 1 = urgent.",
+            "minimum": 0
+        },
+        "confidence": {
+            "type": "integer",
+            "description": "Confidence level of the section data, 0-100%.",
+            "minimum": 0
+        },
+        "actionID": {
+            "type": "object",
+            "description": "The action to be taken for this section.",
+            "required": ["code", "name"],
+            "additionalProperties": false,
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "description": "Action ID code as a hex string.",
+                    "pattern": "^0x[0-9a-fA-F]{4}$"
+                },
+                "name": {
+                    "type": "string",
+                    "description": "Human-readable name for the action."
+                }
+            }
+        }
+    }
+}

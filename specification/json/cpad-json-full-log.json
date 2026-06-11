@@ -1,0 +1,38 @@
+{
+    "$id": "cpad-json-full-log",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "description": "A Common Platform Action Data record represented as JSON.",
+    "required": ["header", "sectionDescriptors", "sections"],
+    "additionalProperties": false,
+    "properties": {
+        "header": {
+            "$ref": "./cpad-json-header.json"
+        },
+        "sectionDescriptors": {
+            "type": "array",
+            "items": {
+                "type": ["object", "null"],
+                "$ref": "./cpad-json-section-descriptor.json"
+            }
+        },
+        "sections": {
+            "type": "array",
+            "items": {
+                "type": ["object", "null"],
+                "minProperties": 1,
+                "maxProperties": 1,
+                "required": [],
+                "additionalProperties": false,
+                "properties": {
+                    "GenericOS": {
+                        "$ref": "./sections/cpad-os-generic.json"
+                    },
+                    "Unknown": {
+                        "$ref": "./sections/cper-unknown.json"
+                    }
+                }
+            }
+        }
+    }
+}

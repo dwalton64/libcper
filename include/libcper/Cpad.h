@@ -90,7 +90,7 @@ typedef struct {
 	UINT32 SignatureEnd;
 	UINT16 SectionCount;
 	UINT8 Urgency;
-    UINT8 Confidence;
+    UINT8 Confidence;   // FIXME: This does not make sense to me.  Should it be removed?
     UINT16 Reserved1;
 	UINT32 ValidationBits;
 	UINT32 RecordLength;

@@ -1,0 +1,99 @@
+{
+    "$id": "cpad-json-header",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "description": "Common Platform Action Data Record Header",
+    "type": "object",
+    "required": [
+        "revision",
+        "sectionCount",
+        "urgency",
+        "confidence",
+        "recordLength",
+        "creatorID",
+        "notificationType",
+        "recordID",
+        "flags"
+    ],
+    "additionalProperties": false,
+    "properties": {
+        "revision": {
+            "type": "object",
+            "description": "A 2-byte field representing a major and minor version number for the CPAD record definition.",
+            "required": ["major", "minor"],
+            "additionalProperties": false,
+            "properties": {
+                "major": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "minor": {
+                    "type": "integer",
+                    "minimum": 0
+                }
+            }
+        },
+        "sectionCount": {
+            "type": "integer",
+            "description": "The number of valid sections associated with the record.",
+            "minimum": 0
+        },
+        "urgency": {
+            "type": "integer",
+            "description": "Indicates the urgency of the action. 0 = not urgent, 1 = urgent.",
+            "minimum": 0
+        },
+        "confidence": {
+            "type": "integer",
+            "description": "Confidence level of the action data, 0-100%.",
+            "minimum": 0
+        },
+        "recordLength": {
+            "type": "integer",
+            "description": "The size of the actual CPAD record including headers, section descriptors, and section bodies.",
+            "minimum": 0
+        },
+        "timestamp": {
+            "type": "string",
+            "description": "The timestamp correlates to the time when the action data was collected."
+        },
+        "timestampIsPrecise": {
+            "type": "boolean",
+            "description": "Timestamp is precise if this bit is set."
+        },
+        "platformID": {
+            "type": "string",
+            "description": "A GUID uniquely identifying the platform."
+        },
+        "partitionID": {
+            "type": "string",
+            "description": "A GUID identifying the partition on which the action applies."
+        },
+        "creatorID": {
+            "type": "string",
+            "description": "A GUID indicating the creator of the CPAD record."
+        },
+        "notificationType": {
+            "type": "object",
+            "description": "A pre-assigned GUID value indicating the record association with a notification type.",
+            "required": ["guid", "type"],
+            "additionalProperties": false,
+            "properties": {
+                "guid": {
+                    "type": "string",
+                    "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "recordID": {
+            "type": "integer",
+            "description": "A value that, when combined with the Creator ID, uniquely identifies the CPAD record."
+        },
+        "flags": {
+            "type": "integer",
+            "description": "Reserved flags field."
+        }
+    }
+}

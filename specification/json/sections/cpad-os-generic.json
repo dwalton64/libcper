@@ -1,0 +1,36 @@
+{
+    "$id": "cpad-os-generic",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "description": "OS Generic CPAD section data.",
+    "required": [
+        "operation",
+        "targetAddress",
+        "parameter1",
+        "parameter2",
+        "parameter3"
+    ],
+    "additionalProperties": false,
+    "properties": {
+        "operation": {
+            "type": "integer",
+            "description": "The operation code for this action."
+        },
+        "targetAddress": {
+            "type": "integer",
+            "description": "The target address for the action."
+        },
+        "parameter1": {
+            "type": "integer",
+            "description": "Action parameter 1."
+        },
+        "parameter2": {
+            "type": "integer",
+            "description": "Action parameter 2."
+        },
+        "parameter3": {
+            "type": "integer",
+            "description": "Action parameter 3."
+        }
+    }
+}
