@@ -69,6 +69,39 @@ build/cpad-generate --out section.bin --single-section unknown
 `--action-ids` is optional and, when given, must appear before `--sections`
 with one ID per section (decimal or `0x`-prefixed hex).
 
+## `lscpad`
+
+Lists the contents of CPAD files in a human-readable form. The optional path
+argument is the default argument (no flag): with no path it lists every
+`.cpad` file in the current directory; given a directory it lists every
+`.cpad` file in it (non-recursive, alphabetically sorted); given a file it
+lists that one file.
+
+```sh
+# List every .cpad file in the current directory.
+build/lscpad
+
+# List a single file.
+build/lscpad sample.cpad
+
+# List a directory of CPADs.
+build/lscpad mydir/
+
+# Print each CPAD as JSON instead of the formatted summary.
+build/lscpad --json sample.cpad
+```
+
+For each file `lscpad` prints the `CPAD Header` (Timestamp, PlatformID,
+PartitionID, CreatorID, RecordID, Flags) followed by each `CPAD Section
+Descriptor` (SectionType, FruID, Urgency, Confidence, FruText, Action ID).
+Header and section-descriptor fields whose validation bit is not set are
+shown as `-- Valid Flag Not Set --`. A worked example:
+
+```sh
+build/cpad-generate --out sample.cpad --action-ids 5 --sections os-generic
+build/lscpad sample.cpad
+```
+
 ## A note on the example files
 
 The `examples/` directory stores records as **hex text** (`*.cperhex`,

@@ -101,6 +101,7 @@ libcper_parse_sources += files(
     'common-utils.c',
     'cper-parse.c',
     'cpad-parse.c',
+    'cpad-print.c',
     'cper-utils.c',
     'ir-parse.c',
     'ir-parse-cpad.c',
@@ -214,6 +215,16 @@ if get_option('utility').allowed()
         edk_sources,
         include_directories: libcper_include_dir,
         link_with: [libcper_parse, libcper_generate_cpad],
+        install: install,
+        install_dir: get_option('bindir'),
+    )
+
+    executable(
+        'lscpad',
+        'cli-app/lscpad.c',
+        include_directories: libcper_include_dir,
+        dependencies: [json_c_dep],
+        link_with: [libcper_parse],
         install: install,
         install_dir: get_option('bindir'),
     )

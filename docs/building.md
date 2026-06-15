@@ -59,12 +59,13 @@ Configure with `-Ddefault_library=static` to produce `.a` archives instead
 
 ### Command-line tools (when `utility` is enabled)
 
-| Binary          | Description                          |
-| --------------- | ------------------------------------ |
-| `cper-convert`  | Convert CPER between binary and JSON |
-| `cpad-convert`  | Convert CPAD between binary and JSON |
-| `cper-generate` | Generate pseudo-random CPER records  |
-| `cpad-generate` | Generate pseudo-random CPAD records  |
+| Binary          | Description                            |
+| --------------- | -------------------------------------- |
+| `cper-convert`  | Convert CPER between binary and JSON   |
+| `cpad-convert`  | Convert CPAD between binary and JSON   |
+| `cper-generate` | Generate pseudo-random CPER records    |
+| `cpad-generate` | Generate pseudo-random CPAD records    |
+| `lscpad`        | List CPAD file contents (text or JSON) |
 
 See [cli.md](cli.md) for usage.
 

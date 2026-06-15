@@ -14,6 +14,7 @@
 
 #include <libcper/Cpad.h>
 #include <libcper/cpad-parse.h>
+#include <libcper/cpad-print.h>
 #include <libcper/generator/cpad-generate.h>
 #include <libcper/generator/sections/gen-cpad-section.h>
 #include <libcper/sections/cpad-section.h>
@@ -478,6 +479,57 @@ static void CpadCompileTimeAssertions_ShortcodeNoSpaces(void)
 	}
 }
 
+/*
+ * Human-readable record printing (lscpad) tests.
+ */
+static void CpadPrintRecordTests(void)
+{
+	const char *type = "os-generic";
+	UINT16 action_id = CPAD_ACTION_REPLACE_PART;
+	char *buf = NULL;
+	size_t size = 0;
+	FILE *record = generate_cpad_record_memstream(&type, &action_id, 1,
+						      &buf, &size, 0);
+	assert(record != NULL);
+	fclose(record);
+
+	//With every validation bit set (as the generator does), the formatted
+	//output contains the headings/fields and no "not set" markers.
+	char *out = NULL;
+	size_t out_size = 0;
+	FILE *mem = open_memstream(&out, &out_size);
+	assert(cpad_print_record("test.cpad", (const unsigned char *)buf, size,
+				 mem) == 0);
+	fclose(mem);
+
+	assert(strstr(out, "==> test.cpad <==") != NULL);
+	assert(strstr(out, "CPAD Header") != NULL);
+	assert(strstr(out, "CPAD Section Descriptor [0]") != NULL);
+	assert(strstr(out, "Action ID:") != NULL);
+	assert(strstr(out, "Replace Part") != NULL);
+	assert(strstr(out, "-- Valid Flag Not Set --") == NULL);
+	free(out);
+
+	//Clearing a header bit (PlatformID) and a section bit (Confidence)
+	//yields the not-set marker.
+	CPAD_HEADER *header = (CPAD_HEADER *)buf;
+	header->ValidationBits &= ~(1u << CPAD_HEADER_PLATFORM_ID_VALID);
+	CPAD_SECTION_DESCRIPTOR *descriptor =
+		(CPAD_SECTION_DESCRIPTOR *)(buf + sizeof(CPAD_HEADER));
+	descriptor->SecValidMask &= ~(1u << CPAD_SECTION_CONFIDENCE_VALID);
+
+	out = NULL;
+	out_size = 0;
+	mem = open_memstream(&out, &out_size);
+	assert(cpad_print_record("test.cpad", (const unsigned char *)buf, size,
+				 mem) == 0);
+	fclose(mem);
+	assert(strstr(out, "-- Valid Flag Not Set --") != NULL);
+	free(out);
+
+	free(buf);
+}
+
 int main(void)
 {
 	if (GEN_CPAD_EXAMPLES) {
@@ -494,6 +546,7 @@ int main(void)
 	MultiSectionCpadTests();
 	CpadHeaderValidationTests();
 	CpadActionIdStringTests();
+	CpadPrintRecordTests();
 	CpadCompileTimeAssertions_TwoWayConversion();
 	CpadCompileTimeAssertions_ShortcodeNoSpaces();
 
