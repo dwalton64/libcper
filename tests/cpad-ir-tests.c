@@ -440,13 +440,15 @@ static void CpadActionIdStringTests(void)
 	       0);
 	assert(strcmp(action_to_string(CPAD_ACTION_REPLACE_PART),
 		      "Replace Part") == 0);
+	//Inject error is a defined action, not "Unknown".
+	assert(strcmp(action_to_string(CPAD_ACTION_INJECT_ERROR),
+		      "Inject Error") == 0);
 	//Proprietary range.
 	assert(strcmp(action_to_string(FIRST_PROPRIETARY_ACTION_ID),
 		      "Proprietary Action") == 0);
 	assert(strcmp(action_to_string(0xFFFF), "Proprietary Action") == 0);
-	//Undefined standard action id.
-	assert(strcmp(action_to_string(CPAD_ACTION_INJECT_ERROR), "Unknown") ==
-	       0);
+	//Reserved/undefined standard action id (0x0007 - 0x7FFF).
+	assert(strcmp(action_to_string(0x0007), "Unknown") == 0);
 }
 
 /*

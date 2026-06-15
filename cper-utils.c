@@ -99,7 +99,8 @@ const char *CPAD_ACTION_NAMES[] = {
     [CPAD_ACTION_POWER_CYCLE]   		= "Power Cycle",
     [CPAD_ACTION_RESEAT_PART]   		= "Reseat Part",
     [CPAD_ACTION_SHUFFLE_PART]  		= "Shuffle Part",
-    [CPAD_ACTION_REPLACE_PART]  		= "Replace Part"
+    [CPAD_ACTION_REPLACE_PART]  		= "Replace Part",
+    [CPAD_ACTION_INJECT_ERROR]  		= "Inject Error"
 };
 
 //Returns the appropriate string for the given CPAD Action ID.
