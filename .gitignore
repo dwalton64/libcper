@@ -24,3 +24,7 @@ specification/document/*aux
 
 subprojects/*
 -subprojects/*.wrap
+# Editor swap files
+*.swp
+*.swo
+.*.swp
