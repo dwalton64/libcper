@@ -118,6 +118,97 @@ const char *action_to_string(UINT16 action)
 		       	"Unknown";
 }
 
+/******************************************/
+/* Platform Action Event utility functions */
+
+//Friendly names for the Action Return Codes, indexed by code value.
+const char *PLATFORM_ACTION_RETURN_CODE_NAMES[] = {
+	[EFI_PLATFORM_ACTION_RETURN_CODE_SUCCESS]	  = "Success",
+	[EFI_PLATFORM_ACTION_RETURN_CODE_FAILED]	  = "Failed",
+	[EFI_PLATFORM_ACTION_RETURN_CODE_PENDING]	  = "Pending",
+	[EFI_PLATFORM_ACTION_RETURN_CODE_POLICY_REJECTED] = "Policy Rejected"
+};
+
+//Friendly names for the Action Failed (0x01) reason codes, indexed by value.
+const char *PLATFORM_ACTION_FAILED_REASON_NAMES[] = {
+	[EFI_PLATFORM_ACTION_REASON_CODE_NONE]		   = "No Reason Code",
+	[EFI_PLATFORM_ACTION_REASON_CODE_UNKNOWN_ERR]	   = "Unknown Error",
+	[EFI_PLATFORM_ACTION_REASON_CODE_EP_NOT_READY]	   = "Endpoint Not Ready",
+	[EFI_PLATFORM_ACTION_REASON_CODE_INVALID_CPAD] = "Malformed or Invalid CPAD",
+	[EFI_PLATFORM_ACTION_REASON_CODE_INCORRECT_EP] = "Incorrect Endpoint Destination",
+	[EFI_PLATFORM_ACTION_REASON_CODE_INVALID_FRUID]	   = "Invalid FRU ID",
+	[EFI_PLATFORM_ACTION_REASON_CODE_UNSUPPORTED_ACTION] = "Unsupported Action",
+	[EFI_PLATFORM_ACTION_REASON_CODE_UNCONFIGURED_ACTION] =
+		"Action Unconfigured or Disabled",
+	[EFI_PLATFORM_ACTION_REASON_CODE_INVALID_ACTION_DATA] =
+		"Invalid Action Data",
+	[EFI_PLATFORM_ACTION_REASON_CODE_TIMEOUT]	   = "Timeout",
+	[EFI_PLATFORM_ACTION_REASON_CODE_DEPENDENCY_FAILED] =
+		"Action Dependency Failed",
+	[EFI_PLATFORM_ACTION_REASON_CODE_PRECONDITION_FAILED] =
+		"Action Precondition Failed"
+};
+
+//Returns a friendly name for the given Action Return Code.
+const char *platform_action_return_code_to_string(UINT8 return_code)
+{
+	if (return_code >= EFI_PLATFORM_ACTION_RETURN_FIRST_VENDOR_STATUS) {
+		return "Vendor-Specific";
+	}
+	return return_code < sizeof(PLATFORM_ACTION_RETURN_CODE_NAMES) /
+				     sizeof(PLATFORM_ACTION_RETURN_CODE_NAMES[0]) ?
+		       PLATFORM_ACTION_RETURN_CODE_NAMES[return_code] :
+		       "Reserved";
+}
+
+//Returns true if reason_code is a valid Action Return Reason Code for the
+//given return_code. NONE (0x00) and vendor codes are valid for every return
+//code; the remaining standard reason codes are valid only within each return
+//code's allowed range (see the *_REASON_MAX defines in Cper.h).
+bool platform_action_reason_code_valid(UINT8 return_code, UINT8 reason_code)
+{
+	//Vendor-defined reason codes (0x80-0xFF) are valid for every return code.
+	if (reason_code >= EFI_PLATFORM_ACTION_RETURN_FIRST_VENDOR_STATUS) {
+		return true;
+	}
+
+	//NONE (0x00) is the minimum, so "<= MAX" covers NONE..MAX inclusive.
+	switch (return_code) {
+	case EFI_PLATFORM_ACTION_RETURN_CODE_SUCCESS:
+		return reason_code <= EFI_PLATFORM_ACTION_SUCCESS_REASON_MAX;
+	case EFI_PLATFORM_ACTION_RETURN_CODE_FAILED:
+		return reason_code <= EFI_PLATFORM_ACTION_FAILED_REASON_MAX;
+	case EFI_PLATFORM_ACTION_RETURN_CODE_PENDING:
+		return reason_code <= EFI_PLATFORM_ACTION_PENDING_REASON_MAX;
+	case EFI_PLATFORM_ACTION_RETURN_CODE_POLICY_REJECTED:
+		return reason_code <=
+		       EFI_PLATFORM_ACTION_POLICY_REJECTED_REASON_MAX;
+	default:
+		//Reserved/unknown return code: only NONE (vendor handled above).
+		return reason_code == EFI_PLATFORM_ACTION_REASON_CODE_NONE;
+	}
+}
+
+//Returns a friendly name for the given Action Return Reason Code, interpreted
+//in the context of its return code.
+const char *platform_action_reason_code_to_string(UINT8 return_code,
+						  UINT8 reason_code)
+{
+	if (reason_code >= EFI_PLATFORM_ACTION_RETURN_FIRST_VENDOR_STATUS) {
+		return "Vendor-Specific";
+	}
+	if (reason_code == EFI_PLATFORM_ACTION_REASON_CODE_NONE) {
+		return "No Reason Code";
+	}
+	if (!platform_action_reason_code_valid(return_code, reason_code)) {
+		return "Reserved/Invalid for this return code";
+	}
+
+	//Only the Action Failed (0x01) return code has standard non-NONE reason
+	//codes, so any valid non-NONE reason resolves through its name table.
+	return PLATFORM_ACTION_FAILED_REASON_NAMES[reason_code];
+}
+
 
 
 /******************************************/

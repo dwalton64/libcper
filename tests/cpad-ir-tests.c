@@ -453,6 +453,73 @@ static void CpadActionIdStringTests(void)
 }
 
 /*
+ * Platform Action Event return/reason code tests (context-aware).
+ */
+static void PlatformActionCodeTests(void)
+{
+	//Return code names.
+	assert(strcmp(platform_action_return_code_to_string(
+			      EFI_PLATFORM_ACTION_RETURN_CODE_SUCCESS),
+		      "Success") == 0);
+	assert(strcmp(platform_action_return_code_to_string(
+			      EFI_PLATFORM_ACTION_RETURN_CODE_POLICY_REJECTED),
+		      "Policy Rejected") == 0);
+	assert(strcmp(platform_action_return_code_to_string(0x04),
+		      "Reserved") == 0);
+	assert(strcmp(platform_action_return_code_to_string(0x90),
+		      "Vendor-Specific") == 0);
+
+	const UINT8 return_codes[] = {
+		EFI_PLATFORM_ACTION_RETURN_CODE_SUCCESS,
+		EFI_PLATFORM_ACTION_RETURN_CODE_FAILED,
+		EFI_PLATFORM_ACTION_RETURN_CODE_PENDING,
+		EFI_PLATFORM_ACTION_RETURN_CODE_POLICY_REJECTED,
+		0x07 //reserved return code
+	};
+
+	for (size_t i = 0; i < sizeof(return_codes) / sizeof(return_codes[0]);
+	     i++) {
+		UINT8 rc = return_codes[i];
+		//NONE and vendor codes are valid for every return code.
+		assert(platform_action_reason_code_valid(
+			rc, EFI_PLATFORM_ACTION_REASON_CODE_NONE));
+		assert(platform_action_reason_code_valid(rc, 0x90));
+		assert(platform_action_reason_code_valid(rc, 0xFF));
+		//A clearly out-of-range standard reason is invalid everywhere.
+		assert(!platform_action_reason_code_valid(rc, 0x40));
+	}
+
+	//The 0x01-0x0B reason codes are valid only under Failed.
+	assert(platform_action_reason_code_valid(
+		EFI_PLATFORM_ACTION_RETURN_CODE_FAILED,
+		EFI_PLATFORM_ACTION_REASON_CODE_INVALID_FRUID));
+	assert(!platform_action_reason_code_valid(
+		EFI_PLATFORM_ACTION_RETURN_CODE_SUCCESS,
+		EFI_PLATFORM_ACTION_REASON_CODE_INVALID_FRUID));
+	assert(!platform_action_reason_code_valid(
+		EFI_PLATFORM_ACTION_RETURN_CODE_PENDING,
+		EFI_PLATFORM_ACTION_REASON_CODE_TIMEOUT));
+
+	//Reason code names are context-aware.
+	assert(strcmp(platform_action_reason_code_to_string(
+			      EFI_PLATFORM_ACTION_RETURN_CODE_FAILED,
+			      EFI_PLATFORM_ACTION_REASON_CODE_TIMEOUT),
+		      "Timeout") == 0);
+	assert(strcmp(platform_action_reason_code_to_string(
+			      EFI_PLATFORM_ACTION_RETURN_CODE_SUCCESS,
+			      EFI_PLATFORM_ACTION_REASON_CODE_NONE),
+		      "No Reason Code") == 0);
+	assert(strcmp(platform_action_reason_code_to_string(
+			      EFI_PLATFORM_ACTION_RETURN_CODE_FAILED, 0x90),
+		      "Vendor-Specific") == 0);
+	//A failed-only reason under a non-failed return code is invalid text.
+	assert(strcmp(platform_action_reason_code_to_string(
+			      EFI_PLATFORM_ACTION_RETURN_CODE_SUCCESS,
+			      EFI_PLATFORM_ACTION_REASON_CODE_TIMEOUT),
+		      "Reserved/Invalid for this return code") == 0);
+}
+
+/*
  * Compile-time-style assertions over the section/generator tables.
  */
 static void CpadCompileTimeAssertions_TwoWayConversion(void)
@@ -546,6 +613,7 @@ int main(void)
 	MultiSectionCpadTests();
 	CpadHeaderValidationTests();
 	CpadActionIdStringTests();
+	PlatformActionCodeTests();
 	CpadPrintRecordTests();
 	CpadCompileTimeAssertions_TwoWayConversion();
 	CpadCompileTimeAssertions_ShortcodeNoSpaces();

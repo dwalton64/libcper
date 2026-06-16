@@ -36,6 +36,12 @@ const char *severity_to_string(UINT32 severity);
 // CPAD-specific utility functions
 const char *action_to_string(UINT16 action);
 
+// Platform Action Event utility functions
+const char *platform_action_return_code_to_string(UINT8 return_code);
+const char *platform_action_reason_code_to_string(UINT8 return_code,
+						  UINT8 reason_code);
+bool platform_action_reason_code_valid(UINT8 return_code, UINT8 reason_code);
+
 // Common utility functions
 json_object *uniform_struct_to_ir(UINT32 *start, int len, const char *names[]);
 json_object *uniform_struct64_to_ir(UINT64 *start, int len,

@@ -1850,8 +1850,9 @@ static const EFI_GUID EFI_ARM_RAS_KVP_UUID_MPAM_PARTID = {
 ///@}
 
 ///
-/// Action Return Codes for Platform Action Events (RAS API spec Table 12).
-/// Indicates the high-level status of a CPAD action taken by a RAS API endpoint.
+/// Action Return Codes for Platform Action Events, as defined in the RAS API
+/// specification. Indicates the high-level status of a CPAD action taken by a
+/// RAS API endpoint.
 ///@{
 #define EFI_PLATFORM_ACTION_RETURN_CODE_SUCCESS         0x00
 #define EFI_PLATFORM_ACTION_RETURN_CODE_FAILED          0x01
@@ -1861,13 +1862,15 @@ static const EFI_GUID EFI_ARM_RAS_KVP_UUID_MPAM_PARTID = {
 ///@}
 
 ///
-/// Action Return Reason Codes for Platform Action Events (RAS API spec
-/// Tables 13-16). These provide additional detail about the Action Return
-/// Code and are interpreted relative to it.
+/// Action Return Reason Codes for Platform Action Events. These provide
+/// additional detail about the Action Return Code and are interpreted relative
+/// to it.
 ///
-/// The values below correspond to the Action Failed (0x01) case (Table 14).
-/// For the Success (0x00), Pending (0x02) and Policy Rejected (0x03) cases the
-/// only standard reason code is 0x00 (no reason code).
+/// EFI_PLATFORM_ACTION_REASON_CODE_NONE (0x00) is the minimum and is valid for
+/// every return code. The remaining standard reason codes below apply only to
+/// the Action Failed (0x01) return code. For the Success (0x00), Pending (0x02)
+/// and Policy Rejected (0x03) return codes the only standard reason code is
+/// NONE.
 ///@{
 #define EFI_PLATFORM_ACTION_REASON_CODE_NONE                  0x00
 #define EFI_PLATFORM_ACTION_REASON_CODE_UNKNOWN_ERR           0x01
@@ -1885,6 +1888,26 @@ static const EFI_GUID EFI_ARM_RAS_KVP_UUID_MPAM_PARTID = {
 
 // Vendor specific return/reason codes start with 0x80 and are specific to a CreatorID
 #define EFI_PLATFORM_ACTION_RETURN_FIRST_VENDOR_STATUS	 	0x80
+
+///
+/// Highest standard reason code allowed for each Action Return Code,
+/// inclusive. The minimum is always EFI_PLATFORM_ACTION_REASON_CODE_NONE
+/// (0x00), and vendor codes (>= EFI_PLATFORM_ACTION_RETURN_FIRST_VENDOR_STATUS)
+/// are valid for every return code.
+///
+/// IMPORTANT: when adding or removing a reason code above, update the matching
+/// *_REASON_MAX below. The context-aware range checks in cper-utils.c rely on
+/// these bounds.
+///@{
+#define EFI_PLATFORM_ACTION_SUCCESS_REASON_MAX                                 \
+	EFI_PLATFORM_ACTION_REASON_CODE_NONE
+#define EFI_PLATFORM_ACTION_FAILED_REASON_MAX                                  \
+	EFI_PLATFORM_ACTION_REASON_CODE_PRECONDITION_FAILED
+#define EFI_PLATFORM_ACTION_PENDING_REASON_MAX                                 \
+	EFI_PLATFORM_ACTION_REASON_CODE_NONE
+#define EFI_PLATFORM_ACTION_POLICY_REJECTED_REASON_MAX                         \
+	EFI_PLATFORM_ACTION_REASON_CODE_NONE
+///@}
 
 
 typedef struct {
