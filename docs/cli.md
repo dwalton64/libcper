@@ -124,10 +124,17 @@ build/create-platform-action-cper sample.cpad --out ev.cper \
     --section 0:failed:invalid-fru-id \
     --section 2:success:none
 
-# Interactive: with no code flags, lscpad-style prompts ask, per section,
-# whether to emit an event and which codes to use.
+# Interactive: with no code flags, prompts ask, per section, whether to emit
+# an event and which codes to use.
 build/create-platform-action-cper sample.cpad --out ev.cper
 ```
+
+In interactive mode each section prompt shows the CPAD Action ID and its name,
+and codes are chosen from a numbered menu (type the menu number or the
+keyword). The reason-code menu is limited to the reasons valid for the chosen
+return code; when "No Reason Code" is the only standard option it is selected
+automatically (press Enter), with the option to enter a vendor-specific code
+(`0x80`–`0xFF`).
 
 Output defaults to **binary** and requires `--out`; `--json` emits the IR
 instead (to `--out` or stdout). Out-of-range return codes and reason codes

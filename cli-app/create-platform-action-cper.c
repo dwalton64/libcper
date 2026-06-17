@@ -188,24 +188,151 @@ static void print_code_list(FILE *stream, const char *title,
 	}
 }
 
-//Interactively prompts for a code, re-prompting until valid. All prompt output
-//goes to stderr so stdout stays clean for --json output.
-static UINT8 prompt_code(const char *label, const CODE_KEYWORD *table,
-			 size_t len, int is_reason)
+//Resolves interactive input to a code value. A bare decimal is treated as a
+//1-based menu index (so the user never has to guess hex vs decimal); a
+//keyword matches case-insensitively; a 0x-prefixed value is taken literally
+//(used for vendor codes 0x80-0xFF). Returns 0 and sets *out on success.
+static int resolve_menu_input(const char *line, const CODE_KEYWORD *table,
+			      size_t len, UINT8 *out)
+{
+	if (line == NULL || line[0] == '\0') {
+		return -1;
+	}
+
+	//Keyword.
+	for (size_t i = 0; i < len; i++) {
+		if (strcasecmp(line, table[i].keyword) == 0) {
+			*out = table[i].value;
+			return 0;
+		}
+	}
+
+	//0x-prefixed literal value (e.g. a vendor code).
+	if (line[0] == '0' && (line[1] == 'x' || line[1] == 'X')) {
+		char *end = NULL;
+		unsigned long value = strtoul(line, &end, 16);
+		if (end != NULL && *end == '\0' && value <= 0xFF) {
+			*out = (UINT8)value;
+			return 0;
+		}
+		return -1;
+	}
+
+	//Bare decimal -> 1-based menu index.
+	if (isdigit((unsigned char)line[0])) {
+		char *end = NULL;
+		unsigned long index = strtoul(line, &end, 10);
+		if (end != NULL && *end == '\0' && index >= 1 && index <= len) {
+			*out = table[index - 1].value;
+			return 0;
+		}
+	}
+	return -1;
+}
+
+//Prints a 1-based numbered menu of codes with their friendly names.
+static void print_menu(FILE *stream, const char *title,
+		       const CODE_KEYWORD *table, size_t len, int is_reason)
+{
+	fprintf(stream, "%s\n", title);
+	for (size_t i = 0; i < len; i++) {
+		const char *name =
+			is_reason ?
+				platform_action_reason_code_to_string(
+					EFI_PLATFORM_ACTION_RETURN_CODE_FAILED,
+					table[i].value) :
+				platform_action_return_code_to_string(
+					table[i].value);
+		fprintf(stream, "    [%zu] %-20s %s\n", i + 1, table[i].keyword,
+			name);
+	}
+}
+
+//Interactively prompts for a return code (menu number, keyword, or 0x value).
+static UINT8 prompt_return_code(void)
 {
 	char line[128];
 	for (;;) {
-		print_code_list(stderr,
-				is_reason ? "  Reason codes:" :
-					    "  Return codes:",
-				table, len, is_reason);
-		fprintf(stderr, "  %s (keyword or number): ", label);
+		print_menu(stderr, "  Return codes:", return_code_keywords,
+			   return_code_keywords_len, 0);
+		fprintf(stderr,
+			"  Select a return code (1-%zu, keyword, or 0x.. value): ",
+			return_code_keywords_len);
 		fflush(stderr);
 		if (read_line(line, sizeof(line)) != 0) {
 			exit(1);
 		}
 		UINT8 value = 0;
-		if (parse_code(line, table, len, &value) == 0) {
+		if (resolve_menu_input(line, return_code_keywords,
+				       return_code_keywords_len, &value) == 0) {
+			return value;
+		}
+		fprintf(stderr, "  Invalid value '%s'. Please try again.\n",
+			line);
+	}
+}
+
+//Interactively prompts for a reason code valid for `return_code`. Only the
+//applicable standard reasons are offered; vendor codes (0x80-0xFF) are always
+//accepted. When NONE is the only standard option no menu is shown - the user
+//presses Enter to accept it, or types a vendor code.
+static UINT8 prompt_reason_code(UINT8 return_code)
+{
+	CODE_KEYWORD applicable[sizeof(reason_code_keywords) /
+				sizeof(reason_code_keywords[0])];
+	size_t count = 0;
+	for (size_t i = 0; i < reason_code_keywords_len; i++) {
+		if (platform_action_reason_code_valid(
+			    return_code, reason_code_keywords[i].value)) {
+			applicable[count++] = reason_code_keywords[i];
+		}
+	}
+
+	char line[128];
+
+	//Only NONE is a standard option: default to it, allow a vendor override.
+	if (count <= 1) {
+		for (;;) {
+			fprintf(stderr,
+				"  Reason code: \"%s\" is the only standard option.\n",
+				platform_action_reason_code_to_string(
+					return_code,
+					EFI_PLATFORM_ACTION_REASON_CODE_NONE));
+			fprintf(stderr,
+				"  Press Enter to accept, or enter a vendor-specific code (0x80-0xFF): ");
+			fflush(stderr);
+			if (read_line(line, sizeof(line)) != 0) {
+				exit(1);
+			}
+			if (line[0] == '\0') {
+				return EFI_PLATFORM_ACTION_REASON_CODE_NONE;
+			}
+			UINT8 value = 0;
+			if (resolve_menu_input(line, applicable, count,
+					       &value) == 0 &&
+			    platform_action_reason_code_valid(return_code,
+							      value)) {
+				return value;
+			}
+			fprintf(stderr,
+				"  Invalid value '%s'. Please try again.\n",
+				line);
+		}
+	}
+
+	//Multiple standard reasons: show the filtered menu.
+	for (;;) {
+		print_menu(stderr, "  Reason codes:", applicable, count, 1);
+		fprintf(stderr,
+			"  Select a reason code (1-%zu, keyword, or a vendor code 0x80-0xFF): ",
+			count);
+		fflush(stderr);
+		if (read_line(line, sizeof(line)) != 0) {
+			exit(1);
+		}
+		UINT8 value = 0;
+		if (resolve_menu_input(line, applicable, count, &value) == 0 &&
+		    platform_action_reason_code_valid(return_code, value)) {
 			return value;
 		}
 		fprintf(stderr, "  Invalid value '%s'. Please try again.\n",
@@ -245,21 +372,20 @@ static UINT16 build_requests_interactive(const unsigned char *cpad_buf,
 	UINT8 uniform_rc = 0;
 	UINT8 uniform_rrc = 0;
 	if (uniform) {
-		uniform_rc = prompt_code("Return code", return_code_keywords,
-					 return_code_keywords_len, 0);
-		uniform_rrc = prompt_code("Reason code", reason_code_keywords,
-					  reason_code_keywords_len, 1);
+		uniform_rc = prompt_return_code();
+		uniform_rrc = prompt_reason_code(uniform_rc);
 	}
 
 	UINT16 count = 0;
 	for (UINT16 i = 0; i < section_count; i++) {
 		UINT16 action_id =
 			cpad_section_action_id(cpad_buf, cpad_size, i);
-		char question[128];
+		char question[160];
 		snprintf(
 			question, sizeof(question),
-			"Emit a Platform Action Event for section %u (Action ID 0x%04X)?",
-			(unsigned)i, (unsigned)action_id);
+			"Emit a Platform Action Event for section %u (Action ID 0x%04X - %s)?",
+			(unsigned)i, (unsigned)action_id,
+			action_to_string(action_id));
 		if (!prompt_yes_no(question, 1)) {
 			continue;
 		}
@@ -268,12 +394,9 @@ static UINT16 build_requests_interactive(const unsigned char *cpad_buf,
 			requests[count].ReturnCode = uniform_rc;
 			requests[count].ReasonCode = uniform_rrc;
 		} else {
-			requests[count].ReturnCode =
-				prompt_code("Return code", return_code_keywords,
-					    return_code_keywords_len, 0);
+			requests[count].ReturnCode = prompt_return_code();
 			requests[count].ReasonCode =
-				prompt_code("Reason code", reason_code_keywords,
-					    reason_code_keywords_len, 1);
+				prompt_reason_code(requests[count].ReturnCode);
 		}
 		count++;
 	}
