@@ -44,7 +44,9 @@ When an endpoint acts on a CPAD, it reports the outcome using a **Platform
 Action Event** — a CPER section (severity "Platform Action Event") that
 carries the action return code, a return reason code, and enough of the
 source CPAD's identifiers to correlate the result with the requested action.
-This section is handled by `libcper` like any other CPER section.
+This section is handled by `libcper` like any other CPER section. The
+`create-platform-action-cper` tool (see [cli.md](cli.md)) builds such a CPER
+from a CPAD.
 
 ## The JSON intermediate representation (IR)
 

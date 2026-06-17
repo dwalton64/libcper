@@ -106,6 +106,7 @@ libcper_parse_sources += files(
     'ir-parse.c',
     'ir-parse-cpad.c',
     'log.c',
+    'platform-action-cper.c',
 )
 
 subdir('include')
@@ -222,6 +223,16 @@ if get_option('utility').allowed()
     executable(
         'lscpad',
         'cli-app/lscpad.c',
+        include_directories: libcper_include_dir,
+        dependencies: [json_c_dep],
+        link_with: [libcper_parse],
+        install: install,
+        install_dir: get_option('bindir'),
+    )
+
+    executable(
+        'create-platform-action-cper',
+        'cli-app/create-platform-action-cper.c',
         include_directories: libcper_include_dir,
         dependencies: [json_c_dep],
         link_with: [libcper_parse],

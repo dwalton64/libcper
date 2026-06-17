@@ -15,6 +15,8 @@
 #include <libcper/Cpad.h>
 #include <libcper/cpad-parse.h>
 #include <libcper/cpad-print.h>
+#include <libcper/cper-parse.h>
+#include <libcper/platform-action-cper.h>
 #include <libcper/generator/cpad-generate.h>
 #include <libcper/generator/sections/gen-cpad-section.h>
 #include <libcper/sections/cpad-section.h>
@@ -597,6 +599,126 @@ static void CpadPrintRecordTests(void)
 	free(buf);
 }
 
+/*
+ * Platform Action Event CPER creation tests.
+ */
+static const char *pae_section_string(json_object *ir, int section_index,
+				      const char *field)
+{
+	json_object *sections = json_object_object_get(ir, "sections");
+	json_object *section =
+		json_object_array_get_idx(sections, section_index);
+	json_object *pae =
+		json_object_object_get(section, "PlatformActionEvent");
+	return json_object_get_string(json_object_object_get(pae, field));
+}
+
+static int pae_section_int(json_object *ir, int section_index,
+			   const char *field)
+{
+	json_object *sections = json_object_object_get(ir, "sections");
+	json_object *section =
+		json_object_array_get_idx(sections, section_index);
+	json_object *pae =
+		json_object_object_get(section, "PlatformActionEvent");
+	return json_object_get_int(json_object_object_get(pae, field));
+}
+
+static void CreatePlatformActionCperTests(void)
+{
+	//Build a three-section CPAD with distinct action ids.
+	const char *types[3] = { "os-generic", "os-generic", "unknown" };
+	UINT16 action_ids[3] = { CPAD_ACTION_REPLACE_PART,
+				 CPAD_ACTION_POWER_CYCLE,
+				 FIRST_PROPRIETARY_ACTION_ID + 1 };
+	char *cpad_buf = NULL;
+	size_t cpad_size = 0;
+	FILE *record = generate_cpad_record_memstream(types, action_ids, 3,
+						      &cpad_buf, &cpad_size, 0);
+	assert(record != NULL);
+	fclose(record);
+
+	//Request a subset (sections 0 and 2) with distinct per-section codes.
+	PLATFORM_ACTION_EVENT_REQUEST requests[2] = {
+		{ 0, EFI_PLATFORM_ACTION_RETURN_CODE_FAILED,
+		  EFI_PLATFORM_ACTION_REASON_CODE_INVALID_FRUID },
+		{ 2, EFI_PLATFORM_ACTION_RETURN_CODE_SUCCESS,
+		  EFI_PLATFORM_ACTION_REASON_CODE_NONE },
+	};
+
+	char *cper_buf = NULL;
+	size_t cper_size = 0;
+	FILE *mem = open_memstream(&cper_buf, &cper_size);
+	assert(cpad_to_platform_action_event_cper(
+		       (const unsigned char *)cpad_buf, cpad_size, requests, 2,
+		       mem) == 0);
+	fclose(mem);
+
+	json_object *ir =
+		cper_buf_to_ir((const unsigned char *)cper_buf, cper_size);
+	assert(ir != NULL);
+	json_object *header = json_object_object_get(ir, "header");
+
+	//Severity is Platform Action Event (4) and one section per request.
+	assert(json_object_get_int(json_object_object_get(
+		       json_object_object_get(header, "severity"), "code")) ==
+	       4);
+	assert(json_object_get_int(
+		       json_object_object_get(header, "sectionCount")) == 2);
+
+	//CreatorID is copied from the CPAD into the CPER header.
+	json_object *cpad_ir =
+		cpad_buf_to_ir((const unsigned char *)cpad_buf, cpad_size);
+	const char *cpad_creator = json_object_get_string(json_object_object_get(
+		json_object_object_get(cpad_ir, "header"), "creatorID"));
+	const char *cper_creator = json_object_get_string(
+		json_object_object_get(header, "creatorID"));
+	assert(strcmp(cpad_creator, cper_creator) == 0);
+
+	//Section 0 reports CPAD section 0 with Failed / Invalid FRU ID.
+	assert(pae_section_int(ir, 0, "cpadSectionIndex") == 0);
+	assert(strcmp(pae_section_string(ir, 0, "actionReturnCode"), "0x01") ==
+	       0);
+	assert(strcmp(pae_section_string(ir, 0, "actionReturnReasonCode"),
+		      "0x05") == 0);
+	assert(strcmp(pae_section_string(ir, 0, "cpadActionId"), "0x0005") ==
+	       0);
+
+	//Section 1 reports CPAD section 2 (a proprietary action) with Success.
+	assert(pae_section_int(ir, 1, "cpadSectionIndex") == 2);
+	assert(strcmp(pae_section_string(ir, 1, "actionReturnCode"), "0x00") ==
+	       0);
+	assert(strcmp(pae_section_string(ir, 1, "cpadActionId"), "0x8001") ==
+	       0);
+
+	//The produced CPER round-trips back to identical bytes.
+	char *roundtrip = NULL;
+	size_t roundtrip_size = 0;
+	FILE *rt = open_memstream(&roundtrip, &roundtrip_size);
+	ir_to_cper(ir, rt);
+	fclose(rt);
+	assert(roundtrip_size == cper_size);
+	assert(memcmp(roundtrip, cper_buf, cper_size) == 0);
+	free(roundtrip);
+
+	//Error cases: zero requests and an out-of-range section index.
+	FILE *discard = open_memstream(&roundtrip, &roundtrip_size);
+	assert(cpad_to_platform_action_event_cper(
+		       (const unsigned char *)cpad_buf, cpad_size, requests, 0,
+		       discard) != 0);
+	PLATFORM_ACTION_EVENT_REQUEST bad = { 99, 0, 0 };
+	assert(cpad_to_platform_action_event_cper(
+		       (const unsigned char *)cpad_buf, cpad_size, &bad, 1,
+		       discard) != 0);
+	fclose(discard);
+	free(roundtrip);
+
+	json_object_put(cpad_ir);
+	json_object_put(ir);
+	free(cper_buf);
+	free(cpad_buf);
+}
+
 int main(void)
 {
 	if (GEN_CPAD_EXAMPLES) {
@@ -614,6 +736,7 @@ int main(void)
 	CpadHeaderValidationTests();
 	CpadActionIdStringTests();
 	PlatformActionCodeTests();
+	CreatePlatformActionCperTests();
 	CpadPrintRecordTests();
 	CpadCompileTimeAssertions_TwoWayConversion();
 	CpadCompileTimeAssertions_ShortcodeNoSpaces();

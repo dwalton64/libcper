@@ -102,6 +102,46 @@ build/cpad-generate --out sample.cpad --action-ids 5 --sections os-generic
 build/lscpad sample.cpad
 ```
 
+## `create-platform-action-cper`
+
+Builds a Platform Action Event CPER from a binary CPAD, reporting the outcome
+of one or more CPAD actions. One Platform Action Event section is emitted per
+selected CPAD section; the CPER header copies the CPAD's PlatformID,
+PartitionID and CreatorID (the CreatorID routes the CPER back to the
+analyzer).
+
+Section indices are 0-based. Return/reason codes may be given as a keyword or
+a number (decimal or `0x` hex); run `--help` for the full list. There are
+three mutually exclusive ways to supply codes:
+
+```sh
+# Uniform: the same codes for every section, optionally skipping some.
+build/create-platform-action-cper sample.cpad --out ev.cper \
+    --return-code failed --reason-code timeout --exclude-sections 1
+
+# Per-section: emit exactly the listed sections, each with its own codes.
+build/create-platform-action-cper sample.cpad --out ev.cper \
+    --section 0:failed:invalid-fru-id \
+    --section 2:success:none
+
+# Interactive: with no code flags, lscpad-style prompts ask, per section,
+# whether to emit an event and which codes to use.
+build/create-platform-action-cper sample.cpad --out ev.cper
+```
+
+Output defaults to **binary** and requires `--out`; `--json` emits the IR
+instead (to `--out` or stdout). Out-of-range return codes and reason codes
+that are not valid for their return code produce a warning on stderr but are
+still written; vendor-specific reason codes (`0x80`–`0xFF`) are accepted
+silently. A full round trip:
+
+```sh
+build/cpad-generate --out sample.cpad --action-ids 5 --sections os-generic
+build/create-platform-action-cper sample.cpad --out ev.cper \
+    --return-code success --reason-code none
+build/cper-convert to-json ev.cper
+```
+
 ## A note on the example files
 
 The `examples/` directory stores records as **hex text** (`*.cperhex`,
