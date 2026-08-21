@@ -125,7 +125,7 @@ size_t generate_section_nvidia_events(void **location,
 	UINT16 ctx_types[5];
 	UINT32 ctx_num_elements[5];
 	size_t context_data_sizes[5] = { 0 };
-	size_t context_total_sizes[5] = { 0 }; // header + data (no padding)
+	size_t context_total_sizes[5] = { 0 }; // header + data, 16-byte aligned
 	size_t total_context_size = 0;
 
 	for (UINT32 i = 0; i < contextCount; i++) {
@@ -144,10 +144,11 @@ size_t generate_section_nvidia_events(void **location,
 		context_data_sizes[i] = get_context_data_size(
 			ctx_types[i], ctx_num_elements[i]);
 
-		// Context size = header + data, aligned to 16 bytes
-		size_t raw_ctx_size = sizeof(EFI_NVIDIA_EVENT_CTX_HEADER) +
-				      context_data_sizes[i];
-		context_total_sizes[i] = (raw_ctx_size + 15) & ~(size_t)15;
+		// Context size = header + data, rounded up to 16-byte
+		// alignment so the reader can advance with ptr += CtxSize
+		size_t raw_size = sizeof(EFI_NVIDIA_EVENT_CTX_HEADER) +
+				  context_data_sizes[i];
+		context_total_sizes[i] = (raw_size + 15) & ~(size_t)15;
 		total_context_size += context_total_sizes[i];
 	}
 
@@ -210,31 +211,15 @@ size_t generate_section_nvidia_events(void **location,
 		EFI_NVIDIA_CPU_EVENT_INFO *cpu_info =
 			(EFI_NVIDIA_CPU_EVENT_INFO *)current;
 		cpu_info->SocketNum = cper_rand() % 8;
-
-		// Construct Architecture from individual bit fields to ensure
-		// roundtrip compatibility with the parser:
-		//   bits [3:0]   = hidFam (4 bits)
-		//   bits [7:4]   = majorRev (4 bits)
-		//   bits [15:8]  = chipId (8 bits)
-		//   bits [19:16] = minorRev (4 bits)
-		//   bits [24:20] = preSiPlatform (5 bits, 0=Silicon or 1=PreSilicon)
-		//   bits [30:25] = reserved (must be 0)
-		//   bit  [31]    = errorInjection (1 bit)
-		{
-			UINT32 hid_fam = cper_rand() & 0xF;
-			UINT32 major_rev = cper_rand() & 0xF;
-			UINT32 chip_id = cper_rand() & 0xFF;
-			UINT32 minor_rev = cper_rand() & 0xF;
-			UINT32 pre_si = cper_rand() & 0x1;
-			UINT32 einj = cper_rand() & 0x1;
-			cpu_info->Architecture =
-				(hid_fam & 0xF) |
-				((major_rev & 0xF) << 4) |
-				((chip_id & 0xFF) << 8) |
-				((minor_rev & 0xF) << 16) |
-				((pre_si & 0x1) << 20) |
-				((einj & 0x1) << 31);
-		}
+		cpu_info->Architecture.HidFam = cper_rand();
+		cpu_info->Architecture.MajorRev = cper_rand();
+		cpu_info->Architecture.ChipId = cper_rand();
+		cpu_info->Architecture.MinorRev = cper_rand();
+		// The IR records preSiPlatform only as Silicon/PreSilicon, so
+		// just the zero/non-zero state survives a round trip.
+		cpu_info->Architecture.PreSiPlatform = cper_rand() & 0x1;
+		cpu_info->Architecture.ErrorInjection = cper_rand() & 0x1;
+		// Reserved bits are left zero by the calloc above.
 		cpu_info->Ecid[0] = cper_rand();
 		cpu_info->Ecid[1] = cper_rand();
 		cpu_info->Ecid[2] = cper_rand();
@@ -259,8 +244,7 @@ size_t generate_section_nvidia_events(void **location,
 		EFI_NVIDIA_EVENT_CTX_HEADER *ctx_header =
 			(EFI_NVIDIA_EVENT_CTX_HEADER *)current;
 
-		// CtxSize includes 16-byte alignment padding so the reader
-		// can advance to the next context with ptr += CtxSize.
+		// CtxSize includes the 16-byte alignment padding
 		ctx_header->CtxSize = (UINT32)context_total_sizes[i];
 		ctx_header->CtxVersion = 0;
 		ctx_header->Reserved1 = 0;
@@ -273,7 +257,7 @@ size_t generate_section_nvidia_events(void **location,
 		// Fill context data based on type
 		fill_context_data(current, ctx_types[i], ctx_num_elements[i]);
 
-		// Advance by aligned size (padding bytes are already zeroed by calloc)
+		// Skip past data plus zeroed (calloc) alignment padding
 		current += context_total_sizes[i] -
 			   sizeof(EFI_NVIDIA_EVENT_CTX_HEADER);
 	}
