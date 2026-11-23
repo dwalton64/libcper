@@ -29,7 +29,8 @@ static const char *optional_props[] = {
 	"GenericProcessor", "Ia32x64Processor", "ArmProcessor", "ArmRas",
 	"Memory", "Memory2", "Pcie", "PciBus", "PciComponent", "Firmware",
 	"GenericDmar", "VtdDmar", "IommuDmar", "CcixPer", "CxlProtocol",
-	"CxlComponent", "Nvidia", "Ampere", "PlatformActionEvent", "Unknown",
+	"CxlComponent", "Nvidia", "Ampere", "PlatformActionEvent", "mtia",
+	"Unknown",
 
 	// CXL?  might have a bug?
 	"partitionID",

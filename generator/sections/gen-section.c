@@ -53,6 +53,7 @@ CPER_GENERATOR_DEFINITION generator_definitions[] = {
 	{ &gEfiAmpereErrorSectionGuid, "ampere", generate_section_ampere },
 	{ &gEfiPlatformActionEvent, "platform-action-event",
 	  generate_section_platform_action_event },
+	{ &gEfiMtiaErrorSectionGuid, "mtia", generate_section_mtia },
 };
 const size_t generator_definitions_len =
 	sizeof(generator_definitions) / sizeof(CPER_GENERATOR_DEFINITION);

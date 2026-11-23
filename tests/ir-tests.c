@@ -935,6 +935,16 @@ void PlatformActionEventTests_BinaryEqual(void)
 	cper_log_section_dual_binary_test("platform-action-event");
 }
 
+//MTIA section tests.
+void MTIASectionTests_IRValid(void)
+{
+	cper_log_section_dual_ir_test("mtia");
+}
+void MTIASectionTests_BinaryEqual(void)
+{
+	cper_log_section_dual_binary_test("mtia");
+}
+
 //Unknown section tests.
 void UnknownSectionTests_IRValid(void)
 {
@@ -967,6 +977,7 @@ int main(void)
 		cper_create_examples("cxlcomponent-media");
 		cper_create_examples("nvidia");
 		cper_create_examples("platform-action-event");
+		cper_create_examples("mtia");
 		cper_create_examples("unknown");
 	}
 	test_base64_encode_good();
@@ -1020,6 +1031,8 @@ int main(void)
 	MemoryValidationBitsSectionTests_IRValid();
 	PlatformActionEventTests_IRValid();
 	PlatformActionEventTests_BinaryEqual();
+	MTIASectionTests_IRValid();
+	MTIASectionTests_BinaryEqual();
 	UnknownSectionTests_IRValid();
 	UnknownSectionTests_BinaryEqual();
 	CompileTimeAssertions_TwoWayConversion();
